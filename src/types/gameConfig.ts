@@ -1,33 +1,73 @@
-export const enum ActionType {
-  GoTo = 'GO_TO'
+export type TSceneTransition =
+  | string
+  | {
+      appear: string
+      dissapear: string
+    }
+
+export const enum EActionType {
+  GoToScene = 'GO_TO_SCENE',
+  GoToDialogTree = 'GO_TO_DIALOG_TREE'
 }
 
-export interface RouteAction {
+export interface TGoToSceneAction {
   nextId: string
-  type: ActionType.GoTo
+  type: EActionType.GoToScene
 }
 
-export type Action = RouteAction
+export interface TGoToDialogTreeAction {
+  nextId: string
+  type: EActionType.GoToDialogTree
+}
 
-export interface ActionBtn {
+export type TAction = TGoToSceneAction | TGoToDialogTreeAction
+
+export interface TActionBtn {
   text: string
-  action: Action
+  action: TAction
 }
 
-export interface Scene {
+export interface BaseTree {
+  id: string
+  mainText?:
+    | string
+    | {
+        text: string
+      }
+}
+
+export interface VariantsTree extends BaseTree {
+  mainText: Required<BaseTree['mainText']>
+  actions: TActionBtn[]
+}
+
+export interface DialogTree extends BaseTree {
+  companion: {
+    name: string
+    answers: TActionBtn[]
+    position?: 'left' | 'right'
+    transition?: TSceneTransition
+    speech?:
+      | string
+      | {
+          text: string
+        }
+    avatar?: {
+      image: string
+    }
+  }
+}
+
+export type TextTree = VariantsTree | DialogTree
+
+export interface TScene {
   image: string
-  mainText: {
-    text: string
-  }
-  buttons?: ActionBtn[]
-  animation?: {
-    appear: string
-    dissapear: string
-  }
+  textTrees: TextTree[]
+  transition?: TSceneTransition
 }
 
-export interface GameConfig {
+export interface TGameConfig {
   name: string
   baseScene: string
-  scenes: Record<string, Scene>
+  scenes: Record<string, TScene>
 }

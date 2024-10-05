@@ -7,11 +7,33 @@
     </div>
     <div class="game-scene__text">
       <div class="message-box">
-        <p class="message-box__message">{{ data.mainText.text }}</p>
-        <div v-if="data.buttons?.length" class="message-box__action-btns">
-          <div class="action-btns">
+        <p v-if="currTree.mainText" class="message-box__message">
+          {{ typeof currTree.mainText === 'string' ? currTree.mainText : currTree.mainText.text }}
+        </p>
+        <div v-if="'actions' in currTree" class="message-box__action-btns">
+          <div v-if="currTree.actions.length" class="action-btns">
             <button
-              v-for="btn in data.buttons"
+              v-for="btn in currTree.actions"
+              @click="btnClick(btn.action)"
+              class="action-btn"
+              type="button"
+            >
+              {{ btn.text }}
+            </button>
+          </div>
+        </div>
+        <div v-else-if="'companion' in currTree" class="message-box__companion companion-card">
+          <p class="companion-card__name">{{ currTree.companion.name }}</p>
+          <p v-if="currTree.companion.speech" class="companion-card__speech">
+            {{
+              typeof currTree.companion.speech === 'string'
+                ? currTree.companion.speech
+                : currTree.companion.speech.text
+            }}
+          </p>
+          <div v-if="currTree.companion.answers.length" class="action-btns">
+            <button
+              v-for="btn in currTree.companion.answers"
               @click="btnClick(btn.action)"
               class="action-btn"
               type="button"
@@ -26,25 +48,35 @@
 </template>
 
 <script setup lang="ts">
-import type { Scene, Action } from '@/types/gameConfig'
-import { toRef, onMounted, onUnmounted } from 'vue'
+import { type TScene, type TAction, EActionType } from '@/types/gameConfig'
+import { toRef, onMounted, onUnmounted, ref, computed } from 'vue'
 
 interface SceneProps {
   gameId: string
-  data: Scene
+  data: TScene
 }
 
 const { gameId, data } = defineProps<SceneProps>()
-const emit = defineEmits<{ btnClick: [action: Action] }>()
+const emit = defineEmits<{ btnClick: [action: TAction] }>()
 
 const imageUrl = () => {
   const baseUrl = `/src/games/${gameId}/assets/images/${data.image}`
   const url = new URL(baseUrl, import.meta.url).href
-  //   debugger
   return url
 }
 
-const btnClick = (action: Action) => {
+const currTreeId = ref(data.textTrees[0]?.id || '')
+const currTree = computed(() => {
+  return data.textTrees.find((tree) => tree.id === currTreeId.value)!
+})
+
+const btnClick = (action: TAction) => {
+  switch (action.type) {
+    case EActionType.GoToDialogTree:
+      currTreeId.value = action.nextId
+      break
+  }
+
   emit('btnClick', action)
 }
 </script>
@@ -83,6 +115,9 @@ const btnClick = (action: Action) => {
   &__action-btns {
     margin-top: 12px;
   }
+  &__companion {
+    margin-top: 12px;
+  }
 }
 .action-btns {
   display: flex;
@@ -93,5 +128,18 @@ const btnClick = (action: Action) => {
   border-radius: 6px;
   border: none;
   cursor: pointer;
+}
+
+.companion-card {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 8px;
+  &__name {
+    color: yellow;
+    margin-bottom: 8px;
+  }
+  &__speech {
+    margin-bottom: 12px;
+  }
 }
 </style>

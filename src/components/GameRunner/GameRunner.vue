@@ -9,8 +9,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Action, GameConfig, RouteAction, Scene as IScene } from '@/types/gameConfig'
-import { ActionType } from '@/types/gameConfig'
+import type { TAction, TGameConfig, TGoToSceneAction, TScene } from '@/types/gameConfig'
+import { EActionType } from '@/types/gameConfig'
 import { ref, computed } from 'vue'
 import { Scene } from '@/components/Scene'
 
@@ -19,21 +19,21 @@ import { Scene } from '@/components/Scene'
 import Config from '@/games/game1'
 const gameId = 'game1'
 
-const config: GameConfig = Config.default
+const config: TGameConfig = Config.default
 const scenes = config.scenes
 
 const currId = ref(config.baseScene)
-const currScene = ref<IScene>(scenes[currId.value])
+const currScene = ref<TScene>(scenes[currId.value])
 
-const btnClick = (action: Action) => {
+const btnClick = (action: TAction) => {
   switch (action.type) {
-    case ActionType.GoTo:
-      goToAction(action)
+    case EActionType.GoToScene:
+      TGoToSceneAction(action)
       break
   }
 }
 
-const goToAction = ({ nextId }: RouteAction) => {
+const TGoToSceneAction = ({ nextId }: TGoToSceneAction) => {
   const newScene = scenes[nextId]
   if (!newScene) return
 
