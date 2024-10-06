@@ -70,6 +70,23 @@ const currTree = computed(() => {
   return data.textTrees.find((tree) => tree.id === currTreeId.value)!
 })
 
+let audio: HTMLAudioElement | undefined
+let timeout: number | undefined
+if (data.audio) {
+  const audioURL = `/src/games/${gameId}/assets/audio/${data.audio}`
+  audio = new Audio(audioURL)
+  audio.addEventListener('canplay', () => {
+    timeout = setTimeout(function () {
+      audio?.play()
+    }, 3000)
+  })
+}
+
+onUnmounted(() => {
+  clearTimeout(timeout)
+  audio?.pause()
+})
+
 const btnClick = (action: TAction) => {
   switch (action.type) {
     case EActionType.GoToDialogTree:

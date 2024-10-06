@@ -59,6 +59,7 @@ const gameConfig: TGameConfig = {
     },
     [ScenesIds.Stalker]: {
       image: ScenesImages[ScenesIds.Stalker],
+      audio: '1994_Doom_II_OST_The_Dave_D_Taylor.mp3',
       textTrees: [
         {
           id: 'Начало диалога',
@@ -112,6 +113,7 @@ const gameConfig: TGameConfig = {
     },
     [ScenesIds.StalkerMonster]: {
       image: ScenesImages[ScenesIds.StalkerMonster],
+      audio: 'Bobby_Prince_At_Doom_Gate.mp3',
       textTrees: [
         {
           id: 'pizda riadom',

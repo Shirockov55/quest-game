@@ -63,6 +63,7 @@ export type TextTree = VariantsTree | DialogTree
 export interface TScene {
   image: string
   textTrees: TextTree[]
+  audio?: string
   transition?: TSceneTransition
 }
 
