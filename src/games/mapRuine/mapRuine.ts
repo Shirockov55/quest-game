@@ -13,24 +13,53 @@ const ScenesImages: Record<ScenesIds, string> = {
 const [rowCount, colCount] = [8, 8]
 const [baseXCoord, baseYCoord] = [8, 8]
 let [activeZoneX, activeZoneY] = [baseXCoord - 1, baseYCoord - 1]
+let boxW = 0
+let boxH = 0
+const fogRange = 1
+
 let ctx: CanvasRenderingContext2D | undefined | null
 let sectors: Record<number, Record<number, Array<number>>> = {}
+let reducedFogSectors: Record<number, Record<number, boolean>> = {}
 let openedSectors: Record<number, Record<number, boolean>> = {
   [activeZoneX]: { [activeZoneY]: true }
 }
-let reducedFogSectors: Record<number, Record<number, boolean>> = {}
-let boxW = 0
-let boxH = 0
 
-const fogRange = 1
+const activePointFillColor = 'rgba(0, 0, 255, 0.4)'
+const fullFogFillColor = 'black'
+const closeFogFillColor = 'rgba(0, 0, 0, 0.8)'
+const oldStepPointFillColor = 'transparent'
 
-const draw = (boxW: number, boxH: number) => {
+const interactiveEngine = {
+  render(canvas: HTMLCanvasElement) {
+    ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    boxW = canvas.width
+    boxH = canvas.height
+    drawCanvas(boxW, boxH)
+
+    canvas.addEventListener('click', ({ offsetX, offsetY }) => {
+      const partX = Math.round((offsetX / boxW) * 10000) / 10000
+      const partY = Math.round((offsetY / boxH) * 10000) / 10000
+      const rectX = Math.floor(partX * rowCount)
+      const rectY = Math.floor(partY * colCount)
+      showSector(rectX, rectY)
+    })
+  },
+  resize(_boxW: number, _boxH: number) {
+    boxW = _boxW
+    boxH = _boxH
+    drawCanvas(boxW, boxH)
+  }
+}
+
+const drawCanvas = (boxW: number, boxH: number) => {
   if (!ctx) return
 
   sectors = {}
-  const cellW = Math.ceil(boxW / colCount)
-  const cellH = Math.ceil(boxH / rowCount)
-  console.log(boxW, boxH, cellW, cellH)
+  let basePoint: [number, number, number, number] | null = null
+  const [cellW, cellH] = getCellSizes()
+  // console.log(boxW, boxH, cellW, cellH)
 
   for (let i = 0; i < rowCount; i++) {
     for (let j = 0; j < colCount; j++) {
@@ -44,42 +73,35 @@ const draw = (boxW: number, boxH: number) => {
       sectors[j][i] = res
 
       if (j + 1 !== baseXCoord || i + 1 !== baseYCoord) {
-        ctx.fillStyle = 'black'
+        ctx.fillStyle = fullFogFillColor
         ctx.fillRect(x1, y1, cellW, cellH)
       } else {
-        ctx.fillStyle = 'rgba(0, 0, 255, .4)'
-        ctx.fillRect(x1, y1, cellW, cellH)
-        reduceFogAroundPoint(j, i)
+        basePoint = [j, i, x1, y1]
       }
     }
   }
-}
 
-const reduceFogAroundPoint = (x: number, y: number) => {
-  for (let i = -fogRange; i <= fogRange; i++) {
-    for (let j = -fogRange; j <= fogRange; j++) {
-      if (j === 0 && i == 0) continue
-      reduceFog(x + j, y + i)
-    }
+  if (basePoint) {
+    const [xGrid, yGrid, x1, y1] = basePoint
+    drawActivePoint(x1, y1)
+    drawReducedFogAroundPoint(xGrid, yGrid)
   }
 }
 
 const showSector = (x: number, y: number) => {
   const alreadyActive = activeZoneX === x && activeZoneY === y
-  const onRoad = activeZoneX === x || activeZoneY === y
+  const onRoad =
+    (activeZoneX === x && (activeZoneY === y - 1 || activeZoneY === y + 1)) ||
+    (activeZoneY === y && (activeZoneX === x - 1 || activeZoneX === x + 1))
   const onFog = reducedFogSectors[x]?.[y]
 
   if (!ctx || !sectors[x]?.[y] || alreadyActive || !onRoad || !onFog) return
 
-  const [x1, x2, y1, y2] = sectors[x][y]
-  ctx.fillStyle = 'transparent'
-  const cellW = Math.ceil(boxW / colCount)
-  const cellH = Math.ceil(boxH / rowCount)
+  const [x1, , y1] = sectors[x][y]
+  ctx.fillStyle = oldStepPointFillColor
+  const [cellW, cellH] = getCellSizes()
 
-  // Draw active point
-  ctx.fillStyle = 'rgba(0, 0, 255, .4)'
-  ctx.clearRect(x1, y1, cellW, cellH)
-  ctx.fillRect(x1, y1, cellW, cellH)
+  drawActivePoint(x1, y1)
 
   // Clear last point
   const [lastX1, , lastY1] = sectors[activeZoneX][activeZoneY]
@@ -90,14 +112,37 @@ const showSector = (x: number, y: number) => {
   activeZoneX = x
   activeZoneY = y
 
-  reduceFogAroundPoint(x, y)
+  drawReducedFogAroundPoint(x, y)
 }
 
-const reduceFog = (x: number, y: number) => {
+const drawActivePoint = (x1: number, y1: number) => {
+  if (!ctx) return
+  const [cellW, cellH] = getCellSizes()
+  ctx.fillStyle = activePointFillColor
+  ctx.clearRect(x1, y1, cellW, cellH)
+  ctx.fillRect(x1, y1, cellW, cellH)
+}
+
+const getCellSizes = () => {
+  const cellW = Math.ceil(boxW / colCount)
+  const cellH = Math.ceil(boxH / rowCount)
+  return [cellW, cellH]
+}
+
+const drawReducedFogAroundPoint = (x: number, y: number) => {
+  for (let i = -fogRange; i <= fogRange; i++) {
+    for (let j = -fogRange; j <= fogRange; j++) {
+      if (j === 0 && i == 0) continue
+      drawReducedFog(x + j, y + i)
+    }
+  }
+}
+
+const drawReducedFog = (x: number, y: number) => {
   if (!ctx || !sectors[x]?.[y] || !!openedSectors[x]?.[y] || !!reducedFogSectors[x]?.[y]) return
 
-  const [x1, x2, y1, y2] = sectors[x][y]
-  ctx.fillStyle = 'rgba(0,0,0,.8)'
+  const [x1, , y1] = sectors[x][y]
+  ctx.fillStyle = closeFogFillColor
   const cellW = Math.ceil(boxW / colCount)
   const cellH = Math.ceil(boxH / rowCount)
   ctx.clearRect(x1, y1, cellW, cellH)
@@ -107,30 +152,6 @@ const reduceFog = (x: number, y: number) => {
   reducedFogSectors[x][y] = true
 }
 
-const interactEngine = {
-  render(canvas: HTMLCanvasElement) {
-    ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    boxW = canvas.width
-    boxH = canvas.height
-    draw(boxW, boxH)
-
-    canvas.addEventListener('click', ({ offsetX, offsetY }) => {
-      const partX = Math.round((offsetX / boxW) * 10000) / 10000
-      const partY = Math.round((offsetY / boxH) * 10000) / 10000
-      const rectX = Math.floor(partX * rowCount)
-      const rectY = Math.floor(partY * colCount)
-      showSector(rectX, rectY)
-    })
-  },
-  resize(_boxW: number, _boxH: number) {
-    boxW = _boxW
-    boxH = _boxH
-    draw(boxW, boxH)
-  }
-}
-
 const gameConfig: TGameConfig = {
   name: 'mapRuine',
   baseScene: ScenesIds.Map,
@@ -138,7 +159,7 @@ const gameConfig: TGameConfig = {
     [ScenesIds.Map]: {
       baseSceneType: 'interactive',
       additional: {
-        interractive: interactEngine
+        interractive: interactiveEngine
       },
       image: ScenesImages[ScenesIds.Map],
       textTrees: [
