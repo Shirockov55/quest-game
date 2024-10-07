@@ -5,9 +5,12 @@ export type TSceneTransition =
       dissapear: string
     }
 
+export type TSceneType = 'static' | 'interactive' | 'temp'
+
 export const enum EActionType {
   GoToScene = 'GO_TO_SCENE',
-  GoToDialogTree = 'GO_TO_DIALOG_TREE'
+  GoToDialogTree = 'GO_TO_DIALOG_TREE',
+  GoToInteractive = 'GO_TO_INTERACTIVE'
 }
 
 export interface TGoToSceneAction {
@@ -63,12 +66,28 @@ export type TextTree = VariantsTree | DialogTree
 export interface TScene {
   image: string
   textTrees: TextTree[]
+  baseSceneType?: TSceneType
   audio?: string
   transition?: TSceneTransition
+  additional?: {
+    interractive?: {
+      render: (el: HTMLCanvasElement) => void
+      resize: (w: number, h: number) => void
+    }
+  }
+}
+
+interface TBaseInventory {
+  id: string
+}
+
+interface TMapInventory extends TBaseInventory {
+  run: () => void
 }
 
 export interface TGameConfig {
   name: string
   baseScene: string
   scenes: Record<string, TScene>
+  inventory?: any[]
 }

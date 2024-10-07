@@ -16,10 +16,10 @@ import { Scene } from '@/components/Scene'
 
 // TODO: Решить с динамическими импортами
 // import { Games } from '@/games'
-import Config from '@/games/game1'
-const gameId = 'game1'
+import { GameConfig } from '@/games/mapRuine'
 
-const config: TGameConfig = Config.default
+const config: TGameConfig = GameConfig
+const gameId = config.name
 const scenes = config.scenes
 
 const currId = ref(config.baseScene)

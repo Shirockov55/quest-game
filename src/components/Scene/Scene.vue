@@ -2,7 +2,14 @@
   <div class="game-scene">
     <div class="game-scene__img-box">
       <div class="game-scene__img-overlay">
-        <img :src="imageUrl()" class="game-scene__img" />
+        <canvas
+          v-show="data.additional?.interractive"
+          class="game-scene__canvas"
+          :id="CANVAS_ID"
+          :width="canvasSize.w"
+          :height="canvasSize.h"
+        ></canvas>
+        <img :src="imageUrl()" class="game-scene__img" ref="imageRef" />
       </div>
     </div>
     <div class="game-scene__text">
@@ -49,7 +56,9 @@
 
 <script setup lang="ts">
 import { type TScene, type TAction, EActionType } from '@/types/gameConfig'
-import { toRef, onMounted, onUnmounted, ref, computed } from 'vue'
+import { toRef, onMounted, onUnmounted, ref, computed, reactive } from 'vue'
+import { CANVAS_ID } from './constants'
+import { nextTick } from 'vue'
 
 interface SceneProps {
   gameId: string
@@ -64,6 +73,9 @@ const imageUrl = () => {
   const url = new URL(baseUrl, import.meta.url).href
   return url
 }
+
+const imageRef = ref<HTMLImageElement>()
+const canvasSize = reactive({ w: '100%', h: '100%' })
 
 const currTreeId = ref(data.textTrees[0]?.id || '')
 const currTree = computed(() => {
@@ -81,6 +93,36 @@ if (data.audio) {
     }, 3000)
   })
 }
+
+onMounted(() => {
+  if (data?.additional?.interractive) {
+    const engine = data.additional.interractive
+    const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement
+    if (!canvas) return
+
+    const imageW = imageRef.value?.width
+    const imageH = imageRef.value?.height
+    canvasSize.w = `${imageW}px`
+    canvasSize.h = `${imageH}px`
+
+    const observer = new ResizeObserver((entries) => {
+      if (!imageRef.value) return
+
+      const imageW = imageRef.value?.width
+      const imageH = imageRef.value?.height
+      canvasSize.w = `${imageW}px`
+      canvasSize.h = `${imageH}px`
+      engine.resize(imageW, imageH)
+    })
+
+    observer.observe(imageRef.value!)
+
+    setTimeout(() => {
+      // TODO: Сделать после загрузки изображения
+      engine.render(canvas)
+    }, 1000)
+  }
+})
 
 onUnmounted(() => {
   clearTimeout(timeout)
@@ -110,8 +152,9 @@ const btnClick = (action: TAction) => {
   &__img-overlay {
     position: absolute;
     inset: 0;
+    display: flex;
+    justify-content: center;
     height: 100%;
-    text-align: center;
   }
   &__img {
     object-fit: contain;
@@ -122,6 +165,15 @@ const btnClick = (action: TAction) => {
     min-height: 300px;
     padding: 12px;
     flex-shrink: 0;
+  }
+  &__canvas {
+    position: absolute;
+    inset: 0;
+    left: 50%;
+    z-index: 10;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
   }
 }
 

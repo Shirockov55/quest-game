@@ -1,1 +1,1 @@
-export * as default from './game1'
+export { default as GameConfig } from './game1'
