@@ -100,25 +100,19 @@ onMounted(() => {
     const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement
     if (!canvas) return
 
-    const imageW = imageRef.value?.width
-    const imageH = imageRef.value?.height
-    canvasSize.w = `${imageW}px`
-    canvasSize.h = `${imageH}px`
+    updateCanvasSizeByImage()
 
-    const observer = new ResizeObserver((entries) => {
+    const observer = new ResizeObserver(() => {
       if (!imageRef.value) return
 
-      const imageW = imageRef.value?.width
-      const imageH = imageRef.value?.height
-      canvasSize.w = `${imageW}px`
-      canvasSize.h = `${imageH}px`
+      const [imageW, imageH] = updateCanvasSizeByImage()
       engine.resize(imageW, imageH)
     })
 
     observer.observe(imageRef.value!)
 
     setTimeout(() => {
-      // TODO: Сделать после загрузки изображения
+      // TODO: Сделать после загрузки изображения для правильных размеров
       engine.render(canvas)
     }, 1000)
   }
@@ -128,6 +122,14 @@ onUnmounted(() => {
   clearTimeout(timeout)
   audio?.pause()
 })
+
+const updateCanvasSizeByImage = () => {
+  const imageW = imageRef.value?.width!
+  const imageH = imageRef.value?.height!
+  canvasSize.w = `${imageW}px`
+  canvasSize.h = `${imageH}px`
+  return [imageW, imageH]
+}
 
 const btnClick = (action: TAction) => {
   switch (action.type) {
@@ -159,6 +161,7 @@ const btnClick = (action: TAction) => {
   &__img {
     object-fit: contain;
     max-height: 100%;
+    user-select: none;
   }
   &__text {
     border-top: 1px solid white;
@@ -174,6 +177,7 @@ const btnClick = (action: TAction) => {
     left: 50%;
     transform: translateX(-50%);
     height: 100%;
+    cursor: pointer;
   }
 }
 
