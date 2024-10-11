@@ -1,67 +1,8 @@
-export type TSceneTransition =
-  | string
-  | {
-      appear: string
-      dissapear: string
-    }
+import type { DynamicText } from '.'
+import type { TSceneTransition } from './common'
+import type { TextTree } from './sceneTrees'
 
 export type TSceneType = 'static' | 'interactive' | 'temp'
-
-export const enum EActionType {
-  GoToScene = 'GO_TO_SCENE',
-  GoToDialogTree = 'GO_TO_DIALOG_TREE',
-  GoToInteractive = 'GO_TO_INTERACTIVE'
-}
-
-export interface TGoToSceneAction {
-  nextId: string
-  type: EActionType.GoToScene
-}
-
-export interface TGoToDialogTreeAction {
-  nextId: string
-  type: EActionType.GoToDialogTree
-}
-
-export type TAction = TGoToSceneAction | TGoToDialogTreeAction
-
-export interface TActionBtn {
-  text: string
-  action: TAction
-}
-
-export interface BaseTree {
-  id: string
-  mainText?:
-    | string
-    | {
-        text: string
-      }
-}
-
-export interface VariantsTree extends BaseTree {
-  mainText: Required<BaseTree['mainText']>
-  actions: TActionBtn[]
-}
-
-export interface DialogTree extends BaseTree {
-  companion: {
-    name: string
-    answers: TActionBtn[]
-    position?: 'left' | 'right'
-    transition?: TSceneTransition
-    speech?:
-      | string
-      | {
-          text: string
-        }
-    avatar?: {
-      image: string
-    }
-  }
-}
-
-export type TextTree = VariantsTree | DialogTree
 
 export interface TScene {
   image: string
@@ -73,6 +14,7 @@ export interface TScene {
     interractive?: {
       render: (el: HTMLCanvasElement) => void
       resize: (w: number, h: number) => void
+      setText?: () => void
     }
   }
 }
@@ -85,9 +27,15 @@ interface TMapInventory extends TBaseInventory {
   run: () => void
 }
 
+export interface TSceneEmmitter {
+  setText(text: DynamicText): void
+}
+
 export interface TGameConfig {
   name: string
   baseScene: string
   scenes: Record<string, TScene>
   inventory?: any[]
 }
+
+export type TAdapterGameConfig = TGameConfig | ((emitter: TSceneEmmitter) => TGameConfig)

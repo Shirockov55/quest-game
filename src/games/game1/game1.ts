@@ -1,4 +1,5 @@
-import { type TGameConfig, EActionType } from '@/types/gameConfig'
+import { EActionType } from '@/constants'
+import type { TGameConfig } from '@/types'
 
 console.log('Test game1!')
 

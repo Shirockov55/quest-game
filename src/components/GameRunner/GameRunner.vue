@@ -2,23 +2,37 @@
   <div class="game-runner">
     <div class="game-canvas">
       <Transition name="fade" mode="out-in" appear>
-        <Scene @btnClick="btnClick" :key="currId" :gameId="gameId" :data="currScene" />
+        <Scene
+          @btnClick="btnClick"
+          :key="currId"
+          :gameId="gameId"
+          :data="currScene"
+          ref="sceneRef"
+        />
       </Transition>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { TAction, TGameConfig, TGoToSceneAction, TScene } from '@/types/gameConfig'
-import { EActionType } from '@/types/gameConfig'
-import { ref, computed } from 'vue'
+import type { DynamicText, TAction, TGameConfig, TGoToSceneAction, TScene } from '@/types'
+import { EActionType } from '@/constants'
+import { ref } from 'vue'
 import { Scene } from '@/components/Scene'
 
 // TODO: Решить с динамическими импортами
-// import { Games } from '@/games'
+// import { GameConfig } from '@/games/game1'
 import { GameConfig } from '@/games/mapRuine'
 
-const config: TGameConfig = GameConfig
+const sceneRef = ref<typeof Scene>()
+
+const emitter = {
+  setText(text: DynamicText) {
+    sceneRef.value?.setText(text)
+  }
+}
+
+const config: TGameConfig = typeof GameConfig === 'function' ? GameConfig(emitter) : GameConfig
 const gameId = config.name
 const scenes = config.scenes
 

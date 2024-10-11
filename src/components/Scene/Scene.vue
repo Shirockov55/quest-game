@@ -15,7 +15,13 @@
     <div class="game-scene__text">
       <div class="message-box">
         <p v-if="currTree.mainText" class="message-box__message">
-          {{ typeof currTree.mainText === 'string' ? currTree.mainText : currTree.mainText.text }}
+          {{
+            typeof currTree.mainText === 'string'
+              ? currTree.mainText
+              : typeof currTree.mainText === 'function'
+                ? currTree.mainText()
+                : currTree.mainText.text
+          }}
         </p>
         <div v-if="'actions' in currTree" class="message-box__action-btns">
           <div v-if="currTree.actions.length" class="action-btns">
@@ -35,7 +41,9 @@
             {{
               typeof currTree.companion.speech === 'string'
                 ? currTree.companion.speech
-                : currTree.companion.speech.text
+                : typeof currTree.companion.speech === 'function'
+                  ? currTree.companion.speech()
+                  : currTree.companion.speech.text
             }}
           </p>
           <div v-if="currTree.companion.answers.length" class="action-btns">
@@ -55,10 +63,10 @@
 </template>
 
 <script setup lang="ts">
-import { type TScene, type TAction, EActionType } from '@/types/gameConfig'
-import { toRef, onMounted, onUnmounted, ref, computed, reactive } from 'vue'
+import type { TScene, TAction, DynamicText } from '@/types'
+import { EActionType } from '@/constants'
+import { onMounted, onUnmounted, ref, computed, reactive } from 'vue'
 import { CANVAS_ID } from './constants'
-import { nextTick } from 'vue'
 
 interface SceneProps {
   gameId: string
@@ -140,6 +148,15 @@ const btnClick = (action: TAction) => {
 
   emit('btnClick', action)
 }
+
+const setText = (text: DynamicText) => {
+  debugger
+  // TODO
+}
+
+defineExpose({
+  setText
+})
 </script>
 <style lang="scss">
 .game-scene {

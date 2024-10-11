@@ -1,6 +1,9 @@
-import { type TGameConfig, EActionType } from '@/types/gameConfig'
+import type { TGameConfig, TSceneEmmitter } from '@/types'
+import { EActionType } from '@/constants'
+import type { TEventSectors } from './types'
 
 console.log('Test game ruine!')
+let emitter: TSceneEmmitter | undefined
 
 const enum ScenesIds {
   Map = 'map'
@@ -16,6 +19,15 @@ let [activeZoneX, activeZoneY] = [baseXCoord - 1, baseYCoord - 1]
 let boxW = 0
 let boxH = 0
 const fogRange = 1
+
+const eventSectors: TEventSectors = {
+  7: {
+    8: {
+      type: 'text',
+      text: 'Пахнет какашками!'
+    }
+  }
+}
 
 let ctx: CanvasRenderingContext2D | undefined | null
 let sectors: Record<number, Record<number, Array<number>>> = {}
@@ -101,6 +113,15 @@ const showSector = (x: number, y: number) => {
   ctx.fillStyle = oldStepPointFillColor
   const [cellW, cellH] = getCellSizes()
 
+  if (eventSectors[x + 1]?.[y + 1]) {
+    const eSector = eventSectors[x + 1][y + 1]
+    switch (eSector.type) {
+      case 'text':
+        emitter?.setText(eSector.text)
+        break
+    }
+  }
+
   drawActivePoint(x1, y1)
 
   // Clear last point
@@ -173,4 +194,9 @@ const gameConfig: TGameConfig = {
   }
 }
 
-export default gameConfig
+const useGameConfig = (_emitter: TSceneEmmitter) => {
+  emitter = _emitter
+  return gameConfig
+}
+
+export default useGameConfig
