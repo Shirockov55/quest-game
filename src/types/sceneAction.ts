@@ -1,13 +1,14 @@
 import type { EActionType } from '@/constants'
 
 export interface TGoToSceneAction {
-  nextId: string
   type: EActionType.GoToScene
+  nextId: string
+  withSaveState?: boolean
 }
 
 export interface TGoToDialogTreeAction {
-  nextId: string
   type: EActionType.GoToDialogTree
+  nextId: string
 }
 
 export type TAction = TGoToSceneAction | TGoToDialogTreeAction

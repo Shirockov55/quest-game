@@ -1,4 +1,6 @@
-import type { DynamicText } from '.'
+import type { TEventSectors, TMapEngineConfig } from '@/packages/engines/map'
+import type { DynamicText } from './text'
+import type { TAction } from './sceneAction'
 import type { TSceneTransition } from './common'
 import type { TextTree } from './sceneTrees'
 
@@ -11,24 +13,21 @@ export interface TScene {
   audio?: string
   transition?: TSceneTransition
   additional?: {
-    interractive?: {
-      render: (el: HTMLCanvasElement) => void
-      resize: (w: number, h: number) => void
-      setText?: () => void
-    }
+    interractive?: TInterractive
   }
 }
 
-interface TBaseInventory {
-  id: string
-}
-
-interface TMapInventory extends TBaseInventory {
-  run: () => void
-}
+export type TInterractive = TMapEngineConfig
 
 export interface TSceneEmmitter {
-  setText(text: DynamicText): void
+  setAction(action: TAction): void
+  getState(sceneId: string): Record<string, unknown>
+  setState(sceneId: string, state: Record<string, unknown>): void
+}
+
+export interface TInteractiveEngine {
+  render(canvas: HTMLCanvasElement): void
+  resize(boxW: number, boxH: number): void
 }
 
 export interface TGameConfig {

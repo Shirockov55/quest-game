@@ -24,7 +24,7 @@
           }}
         </p>
         <div v-if="'actions' in currTree" class="message-box__action-btns">
-          <div v-if="currTree.actions.length" class="action-btns">
+          <div v-if="currTree.actions?.length" class="action-btns">
             <button
               v-for="btn in currTree.actions"
               @click="btnClick(btn.action)"
@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TScene, TAction, DynamicText } from '@/types'
+import type { TScene, TAction, TextTree } from '@/types'
 import { EActionType } from '@/constants'
 import { onMounted, onUnmounted, ref, computed, reactive } from 'vue'
 import { CANVAS_ID } from './constants'
@@ -74,7 +74,7 @@ interface SceneProps {
 }
 
 const { gameId, data } = defineProps<SceneProps>()
-const emit = defineEmits<{ btnClick: [action: TAction] }>()
+const emit = defineEmits<{ action: [action: TAction] }>()
 
 const imageUrl = () => {
   const baseUrl = `/src/games/${gameId}/assets/images/${data.image}`
@@ -85,7 +85,16 @@ const imageUrl = () => {
 const imageRef = ref<HTMLImageElement>()
 const canvasSize = reactive({ w: '100%', h: '100%' })
 
-const currTreeId = ref(data.textTrees[0]?.id || '')
+const emptyTree: TextTree = {
+  id: 'empty',
+  mainText: ''
+}
+
+const textTrees = computed(() => {
+  return [emptyTree, ...data.textTrees]
+})
+
+const currTreeId = ref(data.textTrees[0]?.id || emptyTree.id)
 const currTree = computed(() => {
   return data.textTrees.find((tree) => tree.id === currTreeId.value)!
 })
@@ -104,7 +113,7 @@ if (data.audio) {
 
 onMounted(() => {
   if (data?.additional?.interractive) {
-    const engine = data.additional.interractive
+    const engine = data.additional.interractive.engine
     const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement
     if (!canvas) return
 
@@ -142,20 +151,19 @@ const updateCanvasSizeByImage = () => {
 const btnClick = (action: TAction) => {
   switch (action.type) {
     case EActionType.GoToDialogTree:
-      currTreeId.value = action.nextId
+      goToDialogTree(action.nextId)
       break
+    default:
+      emit('action', action)
   }
-
-  emit('btnClick', action)
 }
 
-const setText = (text: DynamicText) => {
-  debugger
-  // TODO
+const goToDialogTree = (textTreeId: string) => {
+  currTreeId.value = textTreeId
 }
 
 defineExpose({
-  setText
+  goToDialogTree
 })
 </script>
 <style lang="scss">

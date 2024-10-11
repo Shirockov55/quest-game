@@ -7,12 +7,12 @@ export interface BaseTree {
   mainText?: DynamicText
 }
 
-export interface VariantsTree extends BaseTree {
+export type VariantsTree<T extends BaseTree = BaseTree> = T & {
   mainText: DynamicText
-  actions: TActionBtn[]
+  actions?: TActionBtn[]
 }
 
-export interface DialogTree extends BaseTree {
+export type DialogTree<T extends BaseTree = BaseTree> = T & {
   companion: {
     name: string
     answers: TActionBtn[]
@@ -25,4 +25,4 @@ export interface DialogTree extends BaseTree {
   }
 }
 
-export type TextTree = VariantsTree | DialogTree
+export type TextTree<T extends BaseTree = BaseTree> = VariantsTree<T> | DialogTree<T>

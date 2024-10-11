@@ -3,7 +3,7 @@
     <div class="game-canvas">
       <Transition name="fade" mode="out-in" appear>
         <Scene
-          @btnClick="btnClick"
+          @action="actionHandler"
           :key="currId"
           :gameId="gameId"
           :data="currScene"
@@ -15,21 +15,41 @@
 </template>
 
 <script setup lang="ts">
-import type { DynamicText, TAction, TGameConfig, TGoToSceneAction, TScene } from '@/types'
-import { EActionType } from '@/constants'
+import type { TAction, TGameConfig, TScene, TSceneEmmitter } from '@/types'
 import { ref } from 'vue'
 import { Scene } from '@/components/Scene'
 
 // TODO: Решить с динамическими импортами
 // import { GameConfig } from '@/games/game1'
 import { GameConfig } from '@/games/mapRuine'
+import { EActionType } from '@/constants'
 
 const sceneRef = ref<typeof Scene>()
 
-const emitter = {
-  setText(text: DynamicText) {
-    sceneRef.value?.setText(text)
+const actionHandler = (action: TAction) => {
+  switch (action.type) {
+    case EActionType.GoToScene:
+      goToScene(action.nextId)
+      break
+    case EActionType.GoToDialogTree:
+      sceneRef.value?.goToDialogTree(action.nextId)
+      break
   }
+}
+
+const getState = (sceneId: string) => {
+  // TODO: realize store
+  return {}
+}
+
+const setState = () => {
+  // TODO: realize store
+}
+
+const emitter: TSceneEmmitter = {
+  setAction: actionHandler,
+  getState,
+  setState
 }
 
 const config: TGameConfig = typeof GameConfig === 'function' ? GameConfig(emitter) : GameConfig
@@ -39,15 +59,7 @@ const scenes = config.scenes
 const currId = ref(config.baseScene)
 const currScene = ref<TScene>(scenes[currId.value])
 
-const btnClick = (action: TAction) => {
-  switch (action.type) {
-    case EActionType.GoToScene:
-      TGoToSceneAction(action)
-      break
-  }
-}
-
-const TGoToSceneAction = ({ nextId }: TGoToSceneAction) => {
+const goToScene = (nextId: string) => {
   const newScene = scenes[nextId]
   if (!newScene) return
 

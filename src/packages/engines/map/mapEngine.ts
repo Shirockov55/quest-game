@@ -1,7 +1,6 @@
 import type { TSceneEmmitter } from '@/types'
 import { EActionType } from '@/constants'
-import type { TEventSectors, TTextTypeSectorEvent } from './types'
-import { ETextTreeIds, ScenesIds, useConfig } from './useConfig'
+import type { TBaseMapData, TEventSectors } from './types'
 
 console.log('Test game ruine!')
 let emitter: TSceneEmmitter | undefined
@@ -12,32 +11,6 @@ let [activeZoneX, activeZoneY] = [baseXCoord - 1, baseYCoord - 1]
 let boxW = 0
 let boxH = 0
 const fogRange = 1
-
-const strangeMess: TTextTypeSectorEvent = {
-  type: 'text',
-  action: {
-    type: EActionType.GoToDialogTree,
-    nextId: ETextTreeIds.StrangeMan
-  }
-}
-
-const eventSectors: TEventSectors = {
-  5: {
-    7: {
-      type: 'event',
-      imageOnFog: 'enemy1-fog.jpg',
-      image: 'enemy1.jpg',
-      action: {
-        type: EActionType.GoToDialogTree,
-        nextId: ETextTreeIds.MonsterToFight
-      }
-    },
-    8: strangeMess
-  },
-  6: {
-    7: strangeMess
-  }
-}
 
 let ctx: CanvasRenderingContext2D | undefined | null
 let sectors: Record<number, Record<number, Array<number>>> = {}
@@ -51,9 +24,46 @@ const fullFogFillColor = 'black'
 const closeFogFillColor = 'rgba(0, 0, 0, 0.8)'
 const oldStepPointFillColor = 'transparent'
 
+let baseData: TBaseMapData | null = null
+
+class MapEngine {
+  baseData: TBaseMapData
+
+  constructor(baseData: TBaseMapData) {
+    this.baseData = baseData
+  }
+
+  render(canvas: HTMLCanvasElement, _baseData: TBaseMapData) {
+    baseData = _baseData
+    const storeData = emitter?.getState(baseData.sceneId)
+    // TODO: replace base data
+    ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    boxW = canvas.width
+    boxH = canvas.height
+    drawCanvas(boxW, boxH)
+
+    canvas.addEventListener('click', ({ offsetX, offsetY }) => {
+      const partX = Math.round((offsetX / boxW) * 10000) / 10000
+      const partY = Math.round((offsetY / boxH) * 10000) / 10000
+      const rectX = Math.floor(partX * rowCount)
+      const rectY = Math.floor(partY * colCount)
+      showSector(rectX, rectY)
+    })
+  }
+
+  resize(_boxW: number, _boxH: number) {
+    boxW = _boxW
+    boxH = _boxH
+    drawCanvas(boxW, boxH)
+  }
+}
+
 const interactiveEngine = {
-  render(canvas: HTMLCanvasElement) {
-    const storeData = emitter?.getState(ScenesIds.Map)
+  render(canvas: HTMLCanvasElement, _baseData: TBaseMapData) {
+    baseData = _baseData
+    const storeData = emitter?.getState(baseData.sceneId)
     // TODO: replace base data
     ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -237,9 +247,4 @@ const loadImage = (imageName: string, callback: (img: HTMLImageElement) => void)
   }
 }
 
-const useGameConfig = (_emitter: TSceneEmmitter) => {
-  emitter = _emitter
-  return useConfig(interactiveEngine)
-}
-
-export default useGameConfig
+export { MapEngine }
