@@ -1,2 +1,2 @@
-// TODO: Продумать вариант структуры стилизованного текста через объект или массив
+// TODO: Think about text style structure through object or array
 export type DynamicText = string | { text: string } | (() => string)

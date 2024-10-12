@@ -1,29 +1,14 @@
 import { EActionType } from '@/constants'
-import type { BaseTree, TGameConfig, TInteractiveEngine, TScene, TextTree } from '@/types'
-import type { TTextTypeSectorEvent } from './types'
-import { MapEngine, type TEventSectors, type TMapTree } from '@/packages/engines/map'
+import type { TGameConfig, TSceneEmmitter, TextTree } from '@/types'
+import { MapEngine, type TMapTree } from '@/packages/engines/map'
+import { ETextTreeIds, GAME_ID, ScenesIds, ScenesImages } from './constants'
+import { mapBaseData } from './mapEngineConfig'
 
-export const enum ETextTreeIds {
-  Entry = 'entry',
-  StrangeMan = 'strangeMan',
-  MonsterToFight = 'monsterToFight'
-}
+export function useConfig(emitter: TSceneEmmitter) {
+  const mapEngine = new MapEngine(mapBaseData, emitter)
 
-export const enum ScenesIds {
-  Map = 'map',
-  Monster = 'monster'
-}
-
-export const ScenesImages: Record<ScenesIds, string> = {
-  [ScenesIds.Map]: 'map.jpg',
-  [ScenesIds.Monster]: 'enemy1.jpg'
-}
-
-// const engine = new MapEngine(baseData, emitter)
-
-export function useConfig(interactiveEngine: TInteractiveEngine) {
   const gameConfig: TGameConfig = {
-    name: 'mapRuine',
+    name: GAME_ID,
     baseScene: ScenesIds.Map,
     scenes: {
       [ScenesIds.Map]: {
@@ -32,41 +17,7 @@ export function useConfig(interactiveEngine: TInteractiveEngine) {
         additional: {
           interractive: {
             type: 'map',
-            engine: interactiveEngine,
-            baseData: {
-              sceneId: ScenesIds.Map,
-              grid: [8, 8],
-              startCoord: [8, 8],
-              eventCells: (() => {
-                const strangeMess: TTextTypeSectorEvent = {
-                  type: 'text',
-                  action: {
-                    type: EActionType.GoToDialogTree,
-                    nextId: ETextTreeIds.StrangeMan
-                  }
-                }
-
-                const eventMapCells: TEventSectors = {
-                  5: {
-                    7: {
-                      type: 'event',
-                      imageOnFog: 'enemy1-fog.jpg',
-                      image: 'enemy1.jpg',
-                      action: {
-                        type: EActionType.GoToDialogTree,
-                        nextId: ETextTreeIds.MonsterToFight
-                      }
-                    },
-                    8: strangeMess
-                  },
-                  6: {
-                    7: strangeMess
-                  }
-                }
-
-                return eventMapCells
-              })()
-            }
+            engine: mapEngine
           }
         },
         textTrees: [

@@ -1,1 +1,1 @@
-export { default as GameConfig } from './mapRuine'
+export * from './useConfig'

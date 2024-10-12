@@ -6,7 +6,7 @@
           @action="actionHandler"
           :key="currId"
           :gameId="gameId"
-          :data="currScene"
+          :data="getScene()"
           ref="sceneRef"
         />
       </Transition>
@@ -19,9 +19,9 @@ import type { TAction, TGameConfig, TScene, TSceneEmmitter } from '@/types'
 import { ref } from 'vue'
 import { Scene } from '@/components/Scene'
 
-// TODO: Решить с динамическими импортами
+// TODO: Create dynamic imports
 // import { GameConfig } from '@/games/game1'
-import { GameConfig } from '@/games/mapRuine'
+import { useConfig } from '@/games/mapRuine'
 import { EActionType } from '@/constants'
 
 const sceneRef = ref<typeof Scene>()
@@ -52,19 +52,24 @@ const emitter: TSceneEmmitter = {
   setState
 }
 
-const config: TGameConfig = typeof GameConfig === 'function' ? GameConfig(emitter) : GameConfig
+const config: TGameConfig = typeof useConfig === 'function' ? useConfig(emitter) : useConfig
 const gameId = config.name
 const scenes = config.scenes
 
 const currId = ref(config.baseScene)
 const currScene = ref<TScene>(scenes[currId.value])
 
+const getScene = () => {
+  // FIXME: invalid type to data prop
+  return currScene.value as TScene
+}
+
 const goToScene = (nextId: string) => {
   const newScene = scenes[nextId]
   if (!newScene) return
 
   currId.value = nextId
-  currScene.value = structuredClone(newScene)
+  currScene.value = structuredClone<TScene>(newScene)
 }
 </script>
 <style lang="scss">

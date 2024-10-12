@@ -90,13 +90,12 @@ const emptyTree: TextTree = {
   mainText: ''
 }
 
+const currTreeId = ref(data.textTrees[0]?.id || emptyTree.id)
 const textTrees = computed(() => {
   return [emptyTree, ...data.textTrees]
 })
-
-const currTreeId = ref(data.textTrees[0]?.id || emptyTree.id)
 const currTree = computed(() => {
-  return data.textTrees.find((tree) => tree.id === currTreeId.value)!
+  return textTrees.value.find((tree) => tree.id === currTreeId.value)!
 })
 
 let audio: HTMLAudioElement | undefined
@@ -129,7 +128,7 @@ onMounted(() => {
     observer.observe(imageRef.value!)
 
     setTimeout(() => {
-      // TODO: Сделать после загрузки изображения для правильных размеров
+      // TODO: Make after image load and delete timeout
       engine.render(canvas)
     }, 500)
   }

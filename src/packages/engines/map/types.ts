@@ -1,4 +1,4 @@
-import type { BaseTree, TAction, TInteractiveEngine } from '@/types'
+import type { BaseTree, TAction, InteractiveSceneBaseEngine } from '@/types'
 
 export interface TTextTypeSectorEvent {
   type: 'text'
@@ -21,21 +21,29 @@ export interface TEnemySectorEvent {
 
 export type TSectorEventTypeUnion = TTextTypeSectorEvent | TLockTypeSectorEvent | TEnemySectorEvent
 
-export type TEventSectors = Record<number, Record<number, TSectorEventTypeUnion>>
+export type TEventCells = Map<`${number}:${number}`, TSectorEventTypeUnion>
 
 export interface TMapTree extends BaseTree {
   once?: boolean
 }
 
+export interface TMapColors {
+  activePointFill: string
+  fullFogFill: string
+  closeFogFill: string
+  oldStepPointFill: string
+}
+
 export interface TBaseMapData {
+  gameId: string
   sceneId: string
-  grid: [x: number, y: number]
-  startCoord: [x: number, y: number]
-  eventCells: TEventSectors
+  grid: { x: number; y: number }
+  startCoord: { x: number; y: number }
+  eventCells: TEventCells
+  colors?: Partial<TMapColors>
 }
 
 export interface TMapEngineConfig {
   type: 'map'
-  engine: TInteractiveEngine
-  baseData: TBaseMapData
+  engine: InteractiveSceneBaseEngine<TBaseMapData>
 }

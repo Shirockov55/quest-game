@@ -1,249 +1,212 @@
-import type { TSceneEmmitter } from '@/types'
+import { InteractiveSceneBaseEngine, type TSceneEmmitter } from '@/types'
 import { EActionType } from '@/constants'
-import type { TBaseMapData, TEventSectors } from './types'
+import type { TBaseMapData, TMapColors } from './types'
+import { baseColors } from './constants'
 
-console.log('Test game ruine!')
-let emitter: TSceneEmmitter | undefined
+class MapEngine extends InteractiveSceneBaseEngine<TBaseMapData> {
+  ctx!: CanvasRenderingContext2D
+  // TODO: Replace Record to Map
+  cells: Record<number, Record<number, Array<number>>> = {}
+  openedSectors: Record<number, Record<number, boolean>> = {}
+  reducedFogSectors: Record<number, Record<number, boolean>> = {}
+  activeZoneX: number
+  activeZoneY: number
+  colors: TMapColors
+  boxW = 0
+  boxH = 0
+  fogRange = 1
 
-const [rowCount, colCount] = [8, 8]
-const [baseXCoord, baseYCoord] = [8, 8]
-let [activeZoneX, activeZoneY] = [baseXCoord - 1, baseYCoord - 1]
-let boxW = 0
-let boxH = 0
-const fogRange = 1
+  constructor(data: TBaseMapData, emitter: TSceneEmmitter) {
+    super(data, emitter)
 
-let ctx: CanvasRenderingContext2D | undefined | null
-let sectors: Record<number, Record<number, Array<number>>> = {}
-let reducedFogSectors: Record<number, Record<number, boolean>> = {}
-let openedSectors: Record<number, Record<number, boolean>> = {
-  [activeZoneX]: { [activeZoneY]: true }
-}
-
-const activePointFillColor = 'rgba(0, 0, 255, 0.4)'
-const fullFogFillColor = 'black'
-const closeFogFillColor = 'rgba(0, 0, 0, 0.8)'
-const oldStepPointFillColor = 'transparent'
-
-let baseData: TBaseMapData | null = null
-
-class MapEngine {
-  baseData: TBaseMapData
-
-  constructor(baseData: TBaseMapData) {
-    this.baseData = baseData
+    this.activeZoneX = this.data.startCoord.x - 1
+    this.activeZoneY = this.data.startCoord.y - 1
+    this.openedSectors = {
+      [this.activeZoneX]: { [this.activeZoneY]: true }
+    }
+    this.colors = {
+      ...baseColors,
+      ...this.data.colors
+    }
   }
 
-  render(canvas: HTMLCanvasElement, _baseData: TBaseMapData) {
-    baseData = _baseData
-    const storeData = emitter?.getState(baseData.sceneId)
-    // TODO: replace base data
-    ctx = canvas.getContext('2d')
+  render(canvas: HTMLCanvasElement) {
+    const ctx = canvas.getContext('2d')
     if (!ctx) return
+    this.ctx = ctx
 
-    boxW = canvas.width
-    boxH = canvas.height
-    drawCanvas(boxW, boxH)
+    const storeData = this.emitter.getState(this.data.sceneId)
+    // TODO: replace base data
+
+    this.boxW = canvas.width
+    this.boxH = canvas.height
+    this.drawCanvas()
 
     canvas.addEventListener('click', ({ offsetX, offsetY }) => {
-      const partX = Math.round((offsetX / boxW) * 10000) / 10000
-      const partY = Math.round((offsetY / boxH) * 10000) / 10000
-      const rectX = Math.floor(partX * rowCount)
-      const rectY = Math.floor(partY * colCount)
-      showSector(rectX, rectY)
+      const partX = Math.round((offsetX / this.boxW) * 10000) / 10000
+      const partY = Math.round((offsetY / this.boxH) * 10000) / 10000
+      const rectX = Math.floor(partX * this.data.grid.x)
+      const rectY = Math.floor(partY * this.data.grid.y)
+      this.showSector(rectX, rectY)
     })
   }
 
   resize(_boxW: number, _boxH: number) {
-    boxW = _boxW
-    boxH = _boxH
-    drawCanvas(boxW, boxH)
+    this.boxW = _boxW
+    this.boxH = _boxH
+    if (!this.ctx) return
+    this.drawCanvas()
   }
-}
 
-const interactiveEngine = {
-  render(canvas: HTMLCanvasElement, _baseData: TBaseMapData) {
-    baseData = _baseData
-    const storeData = emitter?.getState(baseData.sceneId)
-    // TODO: replace base data
-    ctx = canvas.getContext('2d')
-    if (!ctx) return
+  drawCanvas() {
+    this.cells = {}
+    let basePoint: [number, number, number, number] | null = null
+    const [cellW, cellH] = this.getCellSizes()
 
-    boxW = canvas.width
-    boxH = canvas.height
-    drawCanvas(boxW, boxH)
+    for (let i = 0; i < this.data.grid.x; i++) {
+      for (let j = 0; j < this.data.grid.y; j++) {
+        const x1 = j * cellW
+        const x2 = (j + 1) * cellW
+        const y1 = i * cellH
+        const y2 = (i + 1) * cellH
+        const res = [x1, x2, y1, y2]
 
-    canvas.addEventListener('click', ({ offsetX, offsetY }) => {
-      const partX = Math.round((offsetX / boxW) * 10000) / 10000
-      const partY = Math.round((offsetY / boxH) * 10000) / 10000
-      const rectX = Math.floor(partX * rowCount)
-      const rectY = Math.floor(partY * colCount)
-      showSector(rectX, rectY)
-    })
-  },
-  resize(_boxW: number, _boxH: number) {
-    boxW = _boxW
-    boxH = _boxH
-    drawCanvas(boxW, boxH)
+        if (!this.cells[j]) this.cells[j] = {}
+        this.cells[j][i] = res
+
+        // FIXME: not possible to return to start coords position
+        if (j + 1 !== this.data.startCoord.x || i + 1 !== this.data.startCoord.y) {
+          this.ctx.fillStyle = this.colors.fullFogFill
+          this.ctx.fillRect(x1, y1, cellW, cellH)
+        } else {
+          basePoint = [j, i, x1, y1]
+        }
+      }
+    }
+
+    if (basePoint) {
+      const [xGrid, yGrid, x1, y1] = basePoint
+      this.drawActivePoint(x1, y1)
+      this.drawReducedFogAroundPoint(xGrid, yGrid)
+    }
   }
-}
 
-const drawCanvas = (boxW: number, boxH: number) => {
-  if (!ctx) return
+  showSector(x: number, y: number) {
+    const alreadyActive = this.activeZoneX === x && this.activeZoneY === y
+    const onRoad =
+      (this.activeZoneX === x && (this.activeZoneY === y - 1 || this.activeZoneY === y + 1)) ||
+      (this.activeZoneY === y && (this.activeZoneX === x - 1 || this.activeZoneX === x + 1))
+    const onFog = this.reducedFogSectors[x]?.[y]
 
-  sectors = {}
-  let basePoint: [number, number, number, number] | null = null
-  const [cellW, cellH] = getCellSizes()
-  // console.log(boxW, boxH, cellW, cellH)
+    if (!this.cells[x]?.[y] || alreadyActive || !onRoad || !onFog) return
 
-  for (let i = 0; i < rowCount; i++) {
-    for (let j = 0; j < colCount; j++) {
-      const x1 = j * cellW
-      const x2 = (j + 1) * cellW
-      const y1 = i * cellH
-      const y2 = (i + 1) * cellH
-      const res = [x1, x2, y1, y2]
+    const [x1, , y1] = this.cells[x][y]
+    this.ctx.fillStyle = this.colors.oldStepPointFill
+    const [cellW, cellH] = this.getCellSizes()
 
-      if (!sectors[j]) sectors[j] = {}
-      sectors[j][i] = res
+    const eSector = this.data.eventCells.get(`${x + 1}:${y + 1}`)
+    if (eSector) {
+      if (eSector.action.type === EActionType.GoToScene && eSector.action.withSaveState) {
+        // TODO: Save scene state in store
+        this.emitter.setState(this.data.sceneId, {})
+      }
+      // TODO: Create locked events for map click
+      // TODO: Make events appear once
+      this.emitter.setAction(eSector.action)
 
-      if (j + 1 !== baseXCoord || i + 1 !== baseYCoord) {
-        ctx.fillStyle = fullFogFillColor
-        ctx.fillRect(x1, y1, cellW, cellH)
-      } else {
-        basePoint = [j, i, x1, y1]
+      switch (eSector.type) {
+        case 'text':
+          //
+          break
+        case 'event':
+          if (eSector.image) {
+            this.loadImage(eSector.image, (img) => {
+              this.drawVisibilityZone(x, y, x1, y1, cellW, cellH, img)
+            })
+            return
+          }
+          break
+      }
+    }
+
+    this.drawVisibilityZone(x, y, x1, y1, cellW, cellH)
+  }
+
+  drawVisibilityZone(
+    xGrid: number,
+    yGrid: number,
+    x1Coord: number,
+    y1Coord: number,
+    cellW: number,
+    cellH: number,
+    img?: HTMLImageElement
+  ) {
+    if (!img) {
+      this.drawActivePoint(x1Coord, y1Coord)
+    } else {
+      this.ctx.drawImage(img, x1Coord, y1Coord, cellW, cellH)
+    }
+
+    // Clearing last point
+    const [lastX1, , lastY1] = this.cells[this.activeZoneX][this.activeZoneY]
+    const eventSector = this.data.eventCells.get(`${this.activeZoneX + 1}:${this.activeZoneY + 1}`)
+    if (!eventSector || !('image' in eventSector)) {
+      // TODO: delete last text if not new events
+      this.ctx.clearRect(lastX1, lastY1, cellW, cellH)
+    }
+
+    if (!this.openedSectors[xGrid]) this.openedSectors[xGrid] = {}
+    this.openedSectors[xGrid][yGrid] = true
+    this.activeZoneX = xGrid
+    this.activeZoneY = yGrid
+
+    this.drawReducedFogAroundPoint(xGrid, yGrid)
+  }
+
+  drawActivePoint(x1: number, y1: number) {
+    const [cellW, cellH] = this.getCellSizes()
+    this.ctx.fillStyle = this.colors.activePointFill
+    this.ctx.clearRect(x1, y1, cellW, cellH)
+    this.ctx.fillRect(x1, y1, cellW, cellH)
+  }
+
+  getCellSizes() {
+    const cellW = Math.ceil(this.boxW / this.data.grid.y)
+    const cellH = Math.ceil(this.boxH / this.data.grid.x)
+    return [cellW, cellH]
+  }
+
+  drawReducedFogAroundPoint(x: number, y: number) {
+    for (let i = -this.fogRange; i <= this.fogRange; i++) {
+      for (let j = -this.fogRange; j <= this.fogRange; j++) {
+        if (j === 0 && i == 0) continue
+        this.drawReducedFog(x + j, y + i)
       }
     }
   }
 
-  if (basePoint) {
-    const [xGrid, yGrid, x1, y1] = basePoint
-    drawActivePoint(x1, y1)
-    drawReducedFogAroundPoint(xGrid, yGrid)
-  }
-}
+  drawReducedFog(x: number, y: number) {
+    if (!this.cells[x]?.[y] || !!this.openedSectors[x]?.[y] || !!this.reducedFogSectors[x]?.[y])
+      return
 
-const showSector = (x: number, y: number) => {
-  const alreadyActive = activeZoneX === x && activeZoneY === y
-  const onRoad =
-    (activeZoneX === x && (activeZoneY === y - 1 || activeZoneY === y + 1)) ||
-    (activeZoneY === y && (activeZoneX === x - 1 || activeZoneX === x + 1))
-  const onFog = reducedFogSectors[x]?.[y]
+    const [x1, , y1] = this.cells[x][y]
+    const eventSector = this.data.eventCells.get(`${x + 1}:${y + 1}`)
 
-  if (!ctx || !sectors[x]?.[y] || alreadyActive || !onRoad || !onFog) return
-
-  const [x1, , y1, y2] = sectors[x][y]
-  ctx.fillStyle = oldStepPointFillColor
-  const [cellW, cellH] = getCellSizes()
-
-  if (eventSectors[x + 1]?.[y + 1]) {
-    const eSector = eventSectors[x + 1][y + 1]
-
-    if (eSector.action.type === EActionType.GoToScene && eSector.action.withSaveState) {
-      // TODO: Сохранить состояние сцены
-      emitter?.setState(ScenesIds.Map, {})
+    if (eventSector && eventSector.type === 'event' && eventSector.imageOnFog) {
+      const [cellW, cellH] = this.getCellSizes()
+      this.loadImage(eventSector.imageOnFog, (img) => {
+        this.ctx.drawImage(img, x1, y1, cellW, cellH)
+      })
+    } else {
+      this.ctx.fillStyle = this.colors.closeFogFill
+      const cellW = Math.ceil(this.boxW / this.data.grid.y)
+      const cellH = Math.ceil(this.boxH / this.data.grid.x)
+      this.ctx.clearRect(x1, y1, cellW, cellH)
+      this.ctx.fillRect(x1, y1, cellW, cellH)
     }
 
-    emitter?.setAction(eSector.action)
-
-    switch (eSector.type) {
-      case 'text':
-        //
-        break
-      case 'event':
-        if (eSector.image) {
-          loadImage(eSector.image, (img) => {
-            drawVisibilityZone(x, y, x1, y1, cellW, cellH, img)
-          })
-          return
-        }
-        break
-    }
-  }
-
-  drawVisibilityZone(x, y, x1, y1, cellW, cellH)
-}
-
-const drawVisibilityZone = (
-  xGrid: number,
-  yGrid: number,
-  x1Coord: number,
-  y1Coord: number,
-  cellW: number,
-  cellH: number,
-  img?: HTMLImageElement
-) => {
-  if (!img) {
-    drawActivePoint(x1Coord, y1Coord)
-  } else {
-    ctx?.drawImage(img, x1Coord, y1Coord, cellW, cellH)
-  }
-
-  // Clear last point
-  const [lastX1, , lastY1] = sectors[activeZoneX][activeZoneY]
-  const eventSector = eventSectors[activeZoneX + 1]?.[activeZoneY + 1]
-  if (!eventSector || !('image' in eventSector)) {
-    ctx?.clearRect(lastX1, lastY1, cellW, cellH)
-  }
-
-  if (!openedSectors[xGrid]) openedSectors[xGrid] = {}
-  openedSectors[xGrid][yGrid] = true
-  activeZoneX = xGrid
-  activeZoneY = yGrid
-
-  drawReducedFogAroundPoint(xGrid, yGrid)
-}
-
-const drawActivePoint = (x1: number, y1: number) => {
-  if (!ctx) return
-  const [cellW, cellH] = getCellSizes()
-  ctx.fillStyle = activePointFillColor
-  ctx.clearRect(x1, y1, cellW, cellH)
-  ctx.fillRect(x1, y1, cellW, cellH)
-}
-
-const getCellSizes = () => {
-  const cellW = Math.ceil(boxW / colCount)
-  const cellH = Math.ceil(boxH / rowCount)
-  return [cellW, cellH]
-}
-
-const drawReducedFogAroundPoint = (x: number, y: number) => {
-  for (let i = -fogRange; i <= fogRange; i++) {
-    for (let j = -fogRange; j <= fogRange; j++) {
-      if (j === 0 && i == 0) continue
-      drawReducedFog(x + j, y + i)
-    }
-  }
-}
-
-const drawReducedFog = (x: number, y: number) => {
-  if (!ctx || !sectors[x]?.[y] || !!openedSectors[x]?.[y] || !!reducedFogSectors[x]?.[y]) return
-
-  const [x1, , y1] = sectors[x][y]
-  const eventSector = eventSectors[x + 1]?.[y + 1]
-
-  if (eventSector && eventSector.type === 'event' && eventSector.imageOnFog) {
-    const [cellW, cellH] = getCellSizes()
-    loadImage(eventSector.imageOnFog, (img) => {
-      ctx?.drawImage(img, x1, y1, cellW, cellH)
-    })
-  } else {
-    ctx.fillStyle = closeFogFillColor
-    const cellW = Math.ceil(boxW / colCount)
-    const cellH = Math.ceil(boxH / rowCount)
-    ctx.clearRect(x1, y1, cellW, cellH)
-    ctx.fillRect(x1, y1, cellW, cellH)
-  }
-
-  if (!reducedFogSectors[x]) reducedFogSectors[x] = {}
-  reducedFogSectors[x][y] = true
-}
-
-const loadImage = (imageName: string, callback: (img: HTMLImageElement) => void) => {
-  const img = new Image()
-  img.src = `/src/games/mapRuine/assets/images/${imageName}`
-  img.onload = function () {
-    callback(img)
+    if (!this.reducedFogSectors[x]) this.reducedFogSectors[x] = {}
+    this.reducedFogSectors[x][y] = true
   }
 }
 
