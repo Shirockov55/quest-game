@@ -1,8 +1,9 @@
-import type { TBaseMapData, TEventCells, TTextTypeSectorEvent } from '@/packages/engines/map'
-import { ETextTreeIds, GAME_ID, ScenesIds } from './constants'
+import type { TMapEngineData, TEventCells, TTextTypeSectorEvent } from '@/packages/engines/map'
 import { EActionType } from '@/constants'
 
-export const mapBaseData: TBaseMapData = {
+import { ETextTreeIds, GAME_ID, ScenesIds } from './constants'
+
+export const mapBaseData: TMapEngineData = {
   gameId: GAME_ID,
   sceneId: ScenesIds.Map,
   grid: { x: 8, y: 8 },
