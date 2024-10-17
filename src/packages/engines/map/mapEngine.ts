@@ -1,9 +1,9 @@
 import { InteractiveSceneBaseEngine, type TSceneEmmitter } from '@/types'
 import { EActionType } from '@/constants'
-import type { TBaseMapData, TMapColors } from './types'
+import type { TMapEngineData, TMapColors } from './types'
 import { baseColors } from './constants'
 
-class MapEngine extends InteractiveSceneBaseEngine<TBaseMapData> {
+class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
   ctx!: CanvasRenderingContext2D
   // TODO: Replace Record to Map
   cells: Record<number, Record<number, Array<number>>> = {}
@@ -16,7 +16,7 @@ class MapEngine extends InteractiveSceneBaseEngine<TBaseMapData> {
   boxH = 0
   fogRange = 1
 
-  constructor(data: TBaseMapData, emitter: TSceneEmmitter) {
+  constructor(data: TMapEngineData, emitter: TSceneEmmitter) {
     super(data, emitter)
 
     this.activeZoneX = this.data.startCoord.x - 1

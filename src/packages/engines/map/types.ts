@@ -1,4 +1,4 @@
-import type { BaseTree, TAction, InteractiveSceneBaseEngine } from '@/types'
+import type { BaseTree, TAction, InteractiveSceneBaseEngine, TBaseInterractiveData } from '@/types'
 
 export interface TTextTypeSectorEvent {
   type: 'text'
@@ -34,9 +34,7 @@ export interface TMapColors {
   oldStepPointFill: string
 }
 
-export interface TBaseMapData {
-  gameId: string
-  sceneId: string
+export interface TMapEngineData extends TBaseInterractiveData {
   grid: { x: number; y: number }
   startCoord: { x: number; y: number }
   eventCells: TEventCells
@@ -45,5 +43,5 @@ export interface TBaseMapData {
 
 export interface TMapEngineConfig {
   type: 'map'
-  engine: InteractiveSceneBaseEngine<TBaseMapData>
+  engine: InteractiveSceneBaseEngine<TMapEngineData>
 }

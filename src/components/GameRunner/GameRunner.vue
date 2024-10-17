@@ -69,7 +69,7 @@ const goToScene = (nextId: string) => {
   if (!newScene) return
 
   currId.value = nextId
-  currScene.value = structuredClone<TScene>(newScene)
+  currScene.value = newScene
 }
 </script>
 <style lang="scss">

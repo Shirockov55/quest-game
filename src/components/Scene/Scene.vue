@@ -3,7 +3,7 @@
     <div class="game-scene__img-box">
       <div class="game-scene__img-overlay">
         <canvas
-          v-show="data.additional?.interractive"
+          v-show="data.additional?.interactive"
           class="game-scene__canvas"
           :id="CANVAS_ID"
           :width="canvasSize.w"
@@ -99,7 +99,7 @@ const currTree = computed(() => {
 })
 
 let audio: HTMLAudioElement | undefined
-let timeout: number | undefined
+let timeout: ReturnType<typeof setTimeout> | undefined
 if (data.audio) {
   const audioURL = `/src/games/${gameId}/assets/audio/${data.audio}`
   audio = new Audio(audioURL)
@@ -110,28 +110,36 @@ if (data.audio) {
   })
 }
 
-onMounted(() => {
-  if (data?.additional?.interractive) {
-    const engine = data.additional.interractive.engine
-    const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement
-    if (!canvas) return
-
-    updateCanvasSizeByImage()
-
-    const observer = new ResizeObserver(() => {
-      if (!imageRef.value) return
-
-      const [imageW, imageH] = updateCanvasSizeByImage()
-      engine.resize(imageW, imageH)
-    })
-
-    observer.observe(imageRef.value!)
-
-    setTimeout(() => {
-      // TODO: Make after image load and delete timeout
-      engine.render(canvas)
-    }, 500)
+const runInteractive = () => {
+  const interactive = data?.additional?.interactive
+  if (!interactive) {
+    console.warn('Interactive not found')
+    return
   }
+
+  const engine = interactive.engine
+  const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement
+  if (!canvas) return
+
+  updateCanvasSizeByImage()
+
+  const observer = new ResizeObserver(() => {
+    if (!imageRef.value) return
+
+    const [imageW, imageH] = updateCanvasSizeByImage()
+    engine.resize(imageW, imageH)
+  })
+
+  observer.observe(imageRef.value!)
+
+  setTimeout(() => {
+    // TODO: Make after image load and delete timeout
+    engine.render(canvas)
+  }, 500)
+}
+
+onMounted(() => {
+  if (data.baseSceneType === 'interactive') runInteractive()
 })
 
 onUnmounted(() => {
@@ -151,6 +159,9 @@ const btnClick = (action: TAction) => {
   switch (action.type) {
     case EActionType.GoToDialogTree:
       goToDialogTree(action.nextId)
+      break
+    case EActionType.GoToInteractive:
+      runInteractive()
       break
     default:
       emit('action', action)

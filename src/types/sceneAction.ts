@@ -11,7 +11,11 @@ export interface TGoToDialogTreeAction {
   nextId: string
 }
 
-export type TAction = TGoToSceneAction | TGoToDialogTreeAction
+export interface TGoToInteractive {
+  type: EActionType.GoToInteractive
+}
+
+export type TAction = TGoToSceneAction | TGoToDialogTreeAction | TGoToInteractive
 
 export interface TActionBtn {
   text: string

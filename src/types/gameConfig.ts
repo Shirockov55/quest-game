@@ -1,7 +1,9 @@
 import type { TMapEngineConfig } from '@/packages/engines/map'
+import type { TFightEngineConfig } from '@/packages/engines/fight'
+
 import type { TSceneTransition } from './common'
-import type { TextTree } from './sceneTrees'
 import type { TSceneEmmitter } from './engines'
+import type { TextTree } from './sceneTrees'
 
 export type TSceneType = 'static' | 'interactive' | 'temp'
 
@@ -12,11 +14,11 @@ export interface TScene {
   audio?: string
   transition?: TSceneTransition
   additional?: {
-    interractive?: TInterractive
+    interactive?: TInteractive
   }
 }
 
-export type TInterractive = TMapEngineConfig
+export type TInteractive = TMapEngineConfig | TFightEngineConfig
 
 export interface TGameConfig {
   name: string
