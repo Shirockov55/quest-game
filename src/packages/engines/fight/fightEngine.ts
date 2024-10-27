@@ -6,6 +6,8 @@ const nextPlayer = (lastPlayerId: string) => {
   //
 }
 
+import { FightTemplate } from './components/FightTemplate'
+
 interface TСharacterCharacteristics {
   attack: number
   defence: number
@@ -55,7 +57,7 @@ class PlayingArea {
   }
 
   start() {
-    debugger
+    // debugger
   }
 
   end(isWin: boolean) {
@@ -99,6 +101,8 @@ class FightEngine extends InteractiveSceneBaseEngine<TFightEngineData> {
 
     // stats
     // timer for tempMode
+    this.emitter.setCustomTextComponent(FightTemplate)
+
     const playingArea = new PlayingArea(characters)
     playingArea.start()
     playingArea.onEnd((isWin) => {

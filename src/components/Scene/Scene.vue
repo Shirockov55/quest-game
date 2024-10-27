@@ -12,53 +12,57 @@
         <img :src="imageUrl()" class="game-scene__img" ref="imageRef" />
       </div>
     </div>
-    <div class="game-scene__text">
-      <div class="message-box">
-        <p v-if="currTree.mainText" class="message-box__message">
-          {{
-            typeof currTree.mainText === 'string'
-              ? currTree.mainText
-              : typeof currTree.mainText === 'function'
-                ? currTree.mainText()
-                : currTree.mainText.text
-          }}
-        </p>
-        <div v-if="'actions' in currTree" class="message-box__action-btns">
-          <div v-if="currTree.actions?.length" class="action-btns">
-            <button
-              v-for="btn in currTree.actions"
-              @click="btnClick(btn.action)"
-              class="action-btn"
-              type="button"
-            >
-              {{ btn.text }}
-            </button>
-          </div>
-        </div>
-        <div v-else-if="'companion' in currTree" class="message-box__companion companion-card">
-          <p class="companion-card__name">{{ currTree.companion.name }}</p>
-          <p v-if="currTree.companion.speech" class="companion-card__speech">
-            {{
-              typeof currTree.companion.speech === 'string'
-                ? currTree.companion.speech
-                : typeof currTree.companion.speech === 'function'
-                  ? currTree.companion.speech()
-                  : currTree.companion.speech.text
-            }}
-          </p>
-          <div v-if="currTree.companion.answers.length" class="action-btns">
-            <button
-              v-for="btn in currTree.companion.answers"
-              @click="btnClick(btn.action)"
-              class="action-btn"
-              type="button"
-            >
-              {{ btn.text }}
-            </button>
-          </div>
+    <slot name="overlay">
+      <div class="game-scene__text" :class="{ 'game-scene__text_absolute': data.textBoxAbsolute }">
+        <div class="message-box">
+          <slot name="text-content">
+            <p v-if="currTree.mainText" class="message-box__message">
+              {{
+                typeof currTree.mainText === 'string'
+                  ? currTree.mainText
+                  : typeof currTree.mainText === 'function'
+                    ? currTree.mainText()
+                    : currTree.mainText.text
+              }}
+            </p>
+            <div v-if="'actions' in currTree" class="message-box__action-btns">
+              <div v-if="currTree.actions?.length" class="action-btns">
+                <button
+                  v-for="btn in currTree.actions"
+                  @click="btnClick(btn.action)"
+                  class="action-btn"
+                  type="button"
+                >
+                  {{ btn.text }}
+                </button>
+              </div>
+            </div>
+            <div v-else-if="'companion' in currTree" class="message-box__companion companion-card">
+              <p class="companion-card__name">{{ currTree.companion.name }}</p>
+              <p v-if="currTree.companion.speech" class="companion-card__speech">
+                {{
+                  typeof currTree.companion.speech === 'string'
+                    ? currTree.companion.speech
+                    : typeof currTree.companion.speech === 'function'
+                      ? currTree.companion.speech()
+                      : currTree.companion.speech.text
+                }}
+              </p>
+              <div v-if="currTree.companion.answers.length" class="action-btns">
+                <button
+                  v-for="btn in currTree.companion.answers"
+                  @click="btnClick(btn.action)"
+                  class="action-btn"
+                  type="button"
+                >
+                  {{ btn.text }}
+                </button>
+              </div>
+            </div>
+          </slot>
         </div>
       </div>
-    </div>
+    </slot>
   </div>
 </template>
 
@@ -177,77 +181,5 @@ defineExpose({
 })
 </script>
 <style lang="scss">
-.game-scene {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  &__img-box {
-    position: relative;
-    flex-grow: 1;
-    text-align: center;
-  }
-  &__img-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    height: 100%;
-  }
-  &__img {
-    object-fit: contain;
-    max-height: 100%;
-    user-select: none;
-  }
-  &__text {
-    border-top: 1px solid white;
-    min-height: 300px;
-    padding: 12px;
-    flex-shrink: 0;
-  }
-  &__canvas {
-    position: absolute;
-    inset: 0;
-    left: 50%;
-    z-index: 10;
-    left: 50%;
-    transform: translateX(-50%);
-    height: 100%;
-    cursor: pointer;
-  }
-}
-
-.message-box {
-  margin: 0 auto;
-  width: 100%;
-  max-width: 980px;
-  &__action-btns {
-    margin-top: 12px;
-  }
-  &__companion {
-    margin-top: 12px;
-  }
-}
-.action-btns {
-  display: flex;
-  gap: 12px;
-}
-.action-btn {
-  padding: 8px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-}
-
-.companion-card {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 8px;
-  &__name {
-    color: yellow;
-    margin-bottom: 8px;
-  }
-  &__speech {
-    margin-bottom: 12px;
-  }
-}
+@import './Scene.scss';
 </style>

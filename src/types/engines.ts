@@ -1,9 +1,11 @@
+import type { ComponentPublicInstance } from 'vue'
 import type { TAction } from './sceneAction'
 
 export interface TSceneEmmitter {
   setAction(action: TAction): void
   getState(sceneId: string): Record<string, unknown>
   setState(sceneId: string, state: Record<string, unknown>): void
+  setCustomTextComponent(component: ComponentPublicInstance): void
 }
 
 export interface TBaseInterractiveData {

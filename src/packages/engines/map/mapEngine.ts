@@ -106,10 +106,13 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
 
     const eSector = this.data.eventCells.get(`${x + 1}:${y + 1}`)
     if (eSector) {
-      if (eSector.action.type === EActionType.GoToScene && eSector.action.withSaveState) {
-        // TODO: Save scene state in store
-        this.emitter.setState(this.data.sceneId, {})
+      if (eSector.action.type === EActionType.GoToScene) {
+        if (eSector.action.withSaveState) {
+          // TODO: Save scene state in store
+          this.emitter.setState(this.data.sceneId, {})
+        }
       }
+
       // TODO: Create locked events for map click
       // TODO: Make events appear once
       this.emitter.setAction(eSector.action)

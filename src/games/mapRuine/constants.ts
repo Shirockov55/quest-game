@@ -14,7 +14,7 @@ export const enum ScenesIds {
   Intro1 = 'intro1',
   Intro2 = 'intro2',
   Intro3 = 'intro3',
-  Intro4 = 'intro4',
+  Hero = 'hero',
   Map = 'map',
   Monster = 'monster',
   Rip = 'rip'
@@ -24,7 +24,7 @@ export const ScenesImages: Record<ScenesIds, string> = {
   [ScenesIds.Intro1]: 'intro1.jpg',
   [ScenesIds.Intro2]: 'intro2.jpg',
   [ScenesIds.Intro3]: 'intro3.jpg',
-  [ScenesIds.Intro4]: 'intro4.jpg',
+  [ScenesIds.Hero]: 'hero.jpg',
   [ScenesIds.Map]: 'map.jpg',
   [ScenesIds.Monster]: 'enemy1.jpg',
   [ScenesIds.Rip]: 'rip.jpg'

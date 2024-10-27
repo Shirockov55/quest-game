@@ -8,7 +8,10 @@
           :gameId="gameId"
           :data="getScene()"
           ref="sceneRef"
-        />
+        >
+          <template #overlay><component :is="customOverlayComponent" /></template>
+          <template #text-content><component :is="customTextComponent" /></template>
+        </Scene>
       </Transition>
     </div>
   </div>
@@ -16,15 +19,19 @@
 
 <script setup lang="ts">
 import type { TAction, TGameConfig, TScene, TSceneEmmitter } from '@/types'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Scene } from '@/components/Scene'
 
 // TODO: Create dynamic imports
 // import { GameConfig } from '@/games/game1'
 import { useConfig } from '@/games/mapRuine'
 import { EActionType } from '@/constants'
+import type { ComponentPublicInstance } from 'vue'
+import { shallowRef } from 'vue'
 
 const sceneRef = ref<typeof Scene>()
+const customTextComponent = shallowRef<ComponentPublicInstance | null>(null)
+const customOverlayComponent = shallowRef<ComponentPublicInstance | null>(null)
 
 const actionHandler = (action: TAction) => {
   switch (action.type) {
@@ -49,7 +56,10 @@ const setState = () => {
 const emitter: TSceneEmmitter = {
   setAction: actionHandler,
   getState,
-  setState
+  setState,
+  setCustomTextComponent: (component: ComponentPublicInstance) => {
+    customOverlayComponent.value = component
+  }
 }
 
 const config: TGameConfig = typeof useConfig === 'function' ? useConfig(emitter) : useConfig

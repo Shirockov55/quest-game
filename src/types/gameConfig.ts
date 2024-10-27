@@ -16,6 +16,7 @@ export interface TScene {
   additional?: {
     interactive?: TInteractive
   }
+  textBoxAbsolute?: boolean
 }
 
 export type TInteractive = TMapEngineConfig | TFightEngineConfig

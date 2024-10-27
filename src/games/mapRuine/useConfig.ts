@@ -13,10 +13,11 @@ export function useConfig(emitter: TSceneEmmitter) {
 
   const gameConfig: TGameConfig = {
     name: GAME_ID,
-    baseScene: ScenesIds.Intro1,
+    baseScene: ScenesIds.Monster,
     scenes: {
       [ScenesIds.Intro1]: {
         image: ScenesImages[ScenesIds.Intro1],
+        textBoxAbsolute: true,
         textTrees: [
           {
             id: ETextTreeIds.Intro1,
@@ -42,6 +43,7 @@ export function useConfig(emitter: TSceneEmmitter) {
       },
       [ScenesIds.Rip]: {
         image: ScenesImages[ScenesIds.Rip],
+        textBoxAbsolute: true,
         textTrees: [
           {
             id: 'rip',
@@ -51,6 +53,7 @@ export function useConfig(emitter: TSceneEmmitter) {
       },
       [ScenesIds.Intro2]: {
         image: ScenesImages[ScenesIds.Intro2],
+        textBoxAbsolute: true,
         textTrees: [
           {
             id: ETextTreeIds.Intro2,
@@ -76,6 +79,7 @@ export function useConfig(emitter: TSceneEmmitter) {
       },
       [ScenesIds.Intro3]: {
         image: ScenesImages[ScenesIds.Intro3],
+        textBoxAbsolute: true,
         textTrees: [
           {
             id: ETextTreeIds.Intro3,
@@ -85,15 +89,16 @@ export function useConfig(emitter: TSceneEmmitter) {
                 text: 'Что дальше?',
                 action: {
                   type: EActionType.GoToScene,
-                  nextId: ScenesIds.Intro4
+                  nextId: ScenesIds.Hero
                 }
               }
             ]
           }
         ]
       },
-      [ScenesIds.Intro4]: {
-        image: ScenesImages[ScenesIds.Intro4],
+      [ScenesIds.Hero]: {
+        image: ScenesImages[ScenesIds.Hero],
+        textBoxAbsolute: true,
         textTrees: [
           {
             id: ETextTreeIds.Intro4,
@@ -149,6 +154,7 @@ export function useConfig(emitter: TSceneEmmitter) {
       },
       [ScenesIds.Monster]: {
         image: ScenesImages[ScenesIds.Monster],
+        textBoxAbsolute: true,
         additional: {
           interactive: {
             type: 'fight',
