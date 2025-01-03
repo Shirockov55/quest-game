@@ -1,11 +1,14 @@
-import type { ComponentPublicInstance } from 'vue'
+import { getImageUrl } from '@/helpers'
 import type { TAction } from './sceneAction'
 
 export interface TSceneEmmitter {
   setAction(action: TAction): void
   getState(sceneId: string): Record<string, unknown>
   setState(sceneId: string, state: Record<string, unknown>): void
-  setCustomTextComponent(component: ComponentPublicInstance): void
+  getCharacteristics(): Record<string, unknown>[]
+  setCharacteristics(state: Record<string, unknown>[]): void
+  setCustomOverlayComponent(component: InstanceType<any> | null): void
+  setCustomTextComponent(component: InstanceType<any> | null): void
 }
 
 export interface TBaseInterractiveData {
@@ -27,7 +30,7 @@ export abstract class InteractiveSceneBaseEngine<T extends TBaseInterractiveData
 
   loadImage(imageName: string, callback: (img: HTMLImageElement) => void) {
     const img = new Image()
-    img.src = `/src/games/${this.data.gameId}/assets/images/${imageName}`
+    img.src = getImageUrl(this.data.gameId, imageName)
     img.onload = function () {
       callback(img)
     }

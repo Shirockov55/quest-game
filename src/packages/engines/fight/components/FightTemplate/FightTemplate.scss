@@ -1,0 +1,76 @@
+.fight-template {
+  position: absolute;
+  z-index: 100;
+  inset: 12px;
+  &__left-col {
+    position: absolute;
+    left: 0;
+    width: 300px;
+  }
+  &__right-col {
+    position: absolute;
+    right: 0;
+    width: 300px;
+  }
+  &__actions {
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 0;
+    color: #fff;
+    background-color: black;
+    width: 250px;
+    &_reversed {
+      left: auto;
+      right: calc(100% + 12px);
+    }
+  }
+}
+
+.fight-frame {
+  padding: 12px;
+  border: 1px solid #fff;
+  border-radius: 8px;
+}
+
+.fight-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  &__item {
+    cursor: pointer;
+    &:hover {
+      color: yellowgreen;
+    }
+    &[aria-disabled='true'] {
+      color: grey;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+  }
+}
+
+@mixin shakeAnimation($size) {
+  @keyframes shake {
+    0% {
+      transform: translate($size, 0);
+    }
+    25% {
+      transform: translate(-$size, 0);
+    }
+    50% {
+      transform: translate($size, 0);
+    }
+    75% {
+      transform: translate(-$size, 0);
+    }
+    100% {
+      transform: translate($size, 0);
+    }
+  }
+}
+
+@include shakeAnimation(10px);
+
+.shake {
+  animation: shake 0.3s;
+}

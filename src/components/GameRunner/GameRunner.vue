@@ -9,7 +9,7 @@
           :data="getScene()"
           ref="sceneRef"
         >
-          <template #overlay><component :is="customOverlayComponent" /></template>
+          <template #overlay><component :is="customOverlayComponent" :gameId="gameId" /></template>
           <template #text-content><component :is="customTextComponent" /></template>
         </Scene>
       </Transition>
@@ -19,19 +19,18 @@
 
 <script setup lang="ts">
 import type { TAction, TGameConfig, TScene, TSceneEmmitter } from '@/types'
-import { ref, computed } from 'vue'
+import { ref, provide } from 'vue'
 import { Scene } from '@/components/Scene'
 
 // TODO: Create dynamic imports
 // import { GameConfig } from '@/games/game1'
 import { useConfig } from '@/games/mapRuine'
-import { EActionType } from '@/constants'
-import type { ComponentPublicInstance } from 'vue'
-import { shallowRef } from 'vue'
+import { EActionType, PROVIDE_EMITTER } from '@/constants'
+import { shallowRef, useTemplateRef } from 'vue'
 
-const sceneRef = ref<typeof Scene>()
-const customTextComponent = shallowRef<ComponentPublicInstance | null>(null)
-const customOverlayComponent = shallowRef<ComponentPublicInstance | null>(null)
+const sceneRef = useTemplateRef<InstanceType<typeof Scene>>('sceneRef')
+const customTextComponent = shallowRef<InstanceType<any> | null>(null)
+const customOverlayComponent = shallowRef<InstanceType<any> | null>(null)
 
 const actionHandler = (action: TAction) => {
   switch (action.type) {
@@ -49,7 +48,16 @@ const getState = (sceneId: string) => {
   return {}
 }
 
-const setState = () => {
+const setState = (sceneId: string, state: Record<string, unknown>) => {
+  // TODO: realize store
+}
+
+const getCharacteristics = () => {
+  // TODO: realize store
+  return []
+}
+
+const setCharacteristics = (state: Record<string, unknown>[]) => {
   // TODO: realize store
 }
 
@@ -57,10 +65,16 @@ const emitter: TSceneEmmitter = {
   setAction: actionHandler,
   getState,
   setState,
-  setCustomTextComponent: (component: ComponentPublicInstance) => {
+  getCharacteristics,
+  setCharacteristics,
+  setCustomOverlayComponent: (component: InstanceType<any> | null) => {
     customOverlayComponent.value = component
+  },
+  setCustomTextComponent: (component: InstanceType<any> | null) => {
+    customTextComponent.value = component
   }
 }
+provide(PROVIDE_EMITTER, emitter)
 
 const config: TGameConfig = typeof useConfig === 'function' ? useConfig(emitter) : useConfig
 const gameId = config.name
@@ -83,20 +97,5 @@ const goToScene = (nextId: string) => {
 }
 </script>
 <style lang="scss">
-.game-runner {
-  height: 100%;
-}
-.game-canvas {
-  height: 100%;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 1s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
+@import './GameRunner.scss';
 </style>

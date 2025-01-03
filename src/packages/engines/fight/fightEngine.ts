@@ -56,9 +56,7 @@ class PlayingArea {
     this.players = players
   }
 
-  start() {
-    // debugger
-  }
+  start() {}
 
   end(isWin: boolean) {
     // redirect win or fail
@@ -101,7 +99,7 @@ class FightEngine extends InteractiveSceneBaseEngine<TFightEngineData> {
 
     // stats
     // timer for tempMode
-    this.emitter.setCustomTextComponent(FightTemplate)
+    this.emitter.setCustomOverlayComponent(FightTemplate)
 
     const playingArea = new PlayingArea(characters)
     playingArea.start()

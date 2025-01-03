@@ -27,17 +27,18 @@ export type FighterStat = FighterNumberStat | FighterStringStat | FighterEffectS
 export interface FightAction {
   id: string
   label: string
+  disabled?(ownStats: FighterStat[], enemyStats: FighterStat[]): boolean
   effect(
     ownStats: FighterStat[],
     enemyStats: FighterStat[]
   ): {
     player?: Array<{
       id: string
-      diff: number
+      diff: number | boolean
     }>
     enemy: Array<{
       id: string
-      diff: number
+      diff: number | boolean
     }>
   }
 }

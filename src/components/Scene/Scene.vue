@@ -69,8 +69,9 @@
 <script setup lang="ts">
 import type { TScene, TAction, TextTree } from '@/types'
 import { EActionType } from '@/constants'
-import { onMounted, onUnmounted, ref, computed, reactive } from 'vue'
+import { onMounted, onUnmounted, ref, computed, reactive, useTemplateRef } from 'vue'
 import { CANVAS_ID } from './constants'
+import { getImageUrl } from '@/helpers'
 
 interface SceneProps {
   gameId: string
@@ -81,12 +82,10 @@ const { gameId, data } = defineProps<SceneProps>()
 const emit = defineEmits<{ action: [action: TAction] }>()
 
 const imageUrl = () => {
-  const baseUrl = `/src/games/${gameId}/assets/images/${data.image}`
-  const url = new URL(baseUrl, import.meta.url).href
-  return url
+  return getImageUrl(gameId, data.image)
 }
 
-const imageRef = ref<HTMLImageElement>()
+const imageRef = useTemplateRef<HTMLImageElement>('imageRef')
 const canvasSize = reactive({ w: '100%', h: '100%' })
 
 const emptyTree: TextTree = {
