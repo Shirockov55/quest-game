@@ -9,8 +9,15 @@
           :data="getScene()"
           ref="sceneRef"
         >
-          <template #overlay><component :is="customOverlayComponent" :gameId="gameId" /></template>
-          <template #text-content><component :is="customTextComponent" /></template>
+          <template #overlay
+            ><component
+              v-if="customOverlayComponent"
+              :is="customOverlayComponent.component"
+              v-bind="customOverlayComponent.props"
+          /></template>
+          <template v-if="customTextComponent" #text-content
+            ><component :is="customTextComponent"
+          /></template>
         </Scene>
       </Transition>
     </div>
@@ -25,12 +32,17 @@ import { Scene } from '@/components/Scene'
 // TODO: Create dynamic imports
 // import { GameConfig } from '@/games/game1'
 import { useConfig } from '@/games/mapRuine'
-import { EActionType, PROVIDE_EMITTER } from '@/constants'
+import { EActionType, PROVIDE_CONFIG, PROVIDE_EMITTER } from '@/constants'
 import { shallowRef, useTemplateRef } from 'vue'
+import { useSceneStore } from '@/stores/scene'
+import { useCharacterStore } from '@/stores/character'
 
 const sceneRef = useTemplateRef<InstanceType<typeof Scene>>('sceneRef')
 const customTextComponent = shallowRef<InstanceType<any> | null>(null)
-const customOverlayComponent = shallowRef<InstanceType<any> | null>(null)
+const customOverlayComponent = shallowRef<{
+  component: InstanceType<any> | null
+  props?: Record<string, unknown> | null
+} | null>(null)
 
 const actionHandler = (action: TAction) => {
   switch (action.type) {
@@ -43,32 +55,27 @@ const actionHandler = (action: TAction) => {
   }
 }
 
-const getState = (sceneId: string) => {
-  // TODO: realize store
-  return {}
-}
+const { setData, getData } = useSceneStore()
+const { setBatchData: setBatchChars, getFullData: getAllChars } = useCharacterStore()
 
-const setState = (sceneId: string, state: Record<string, unknown>) => {
-  // TODO: realize store
-}
-
-const getCharacteristics = () => {
-  // TODO: realize store
-  return []
-}
-
-const setCharacteristics = (state: Record<string, unknown>[]) => {
-  // TODO: realize store
+const setCharacteristics = (state: Record<string, unknown>) => {
+  setBatchChars(state)
 }
 
 const emitter: TSceneEmmitter = {
   setAction: actionHandler,
-  getState,
-  setState,
-  getCharacteristics,
+  getState: getData,
+  setState: setData,
+  getCharacteristics: getAllChars,
   setCharacteristics,
-  setCustomOverlayComponent: (component: InstanceType<any> | null) => {
-    customOverlayComponent.value = component
+  setCustomOverlayComponent: (
+    component: InstanceType<any> | null,
+    props?: Record<string, unknown> | null
+  ) => {
+    customOverlayComponent.value = {
+      component,
+      props
+    }
   },
   setCustomTextComponent: (component: InstanceType<any> | null) => {
     customTextComponent.value = component
@@ -76,12 +83,18 @@ const emitter: TSceneEmmitter = {
 }
 provide(PROVIDE_EMITTER, emitter)
 
-const config: TGameConfig = typeof useConfig === 'function' ? useConfig(emitter) : useConfig
+const config: TGameConfig<any> = typeof useConfig === 'function' ? useConfig(emitter) : useConfig
 const gameId = config.name
 const scenes = config.scenes
 
+if (config.playerChars) {
+  setBatchChars(config.playerChars)
+}
+
 const currId = ref(config.baseScene)
 const currScene = ref<TScene>(scenes[currId.value])
+
+provide(PROVIDE_CONFIG, config)
 
 const getScene = () => {
   // FIXME: invalid type to data prop

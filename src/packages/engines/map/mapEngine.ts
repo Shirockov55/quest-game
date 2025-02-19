@@ -1,6 +1,6 @@
 import { InteractiveSceneBaseEngine, type TSceneEmmitter } from '@/types'
 import { EActionType } from '@/constants'
-import type { TMapEngineData, TMapColors } from './types'
+import type { TMapEngineData, TMapColors, TMapStore } from './types'
 import { baseColors } from './constants'
 
 class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
@@ -35,8 +35,14 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
     if (!ctx) return
     this.ctx = ctx
 
-    const storeData = this.emitter.getState(this.data.sceneId)
-    // TODO: replace base data
+    const storeData = this.emitter.getState<TMapStore>(this.data.sceneId)
+    if (!storeData) {
+      this.emitter.setState<TMapStore>(this.data.sceneId, {
+        activeZoneX: this.activeZoneX,
+        activeZoneY: this.activeZoneY,
+        openedSectors: this.openedSectors
+      })
+    }
 
     this.boxW = canvas.width
     this.boxH = canvas.height

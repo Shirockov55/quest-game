@@ -1,12 +1,20 @@
-import { InteractiveSceneBaseEngine, type TAction, type TSceneEmmitter } from '@/types'
+import { InteractiveSceneBaseEngine, type TGameConfig, type TSceneEmmitter } from '@/types'
 
-import type { TFightEngineData } from './types'
+import type {
+  FighterChars,
+  FighterNumberStat,
+  FighterStringStat,
+  FightTemplateProps,
+  TFightEngineConfig,
+  TFightEngineData
+} from './types'
 
 const nextPlayer = (lastPlayerId: string) => {
   //
 }
 
 import { FightTemplate } from './components/FightTemplate'
+import { EActionType } from '@/constants'
 
 interface TСharacterCharacteristics {
   attack: number
@@ -19,13 +27,6 @@ interface TСharacter {
   сharacteristics: TСharacterCharacteristics
   isHuman?: boolean
 }
-
-interface TFightResults {
-  success: TAction
-  fail: TAction
-}
-
-const fightResults = {}
 
 const hero: TСharacter = {
   name: 'Hero 1',
@@ -80,16 +81,18 @@ const round = (player: TСharacter) => {
   }
 }
 
-class FightEngine extends InteractiveSceneBaseEngine<TFightEngineData> {
+class FightEngine<T = Record<string, unknown>> extends InteractiveSceneBaseEngine<
+  TFightEngineData<T>
+> {
   ctx!: CanvasRenderingContext2D
   boxW = 0
   boxH = 0
 
-  constructor(data: TFightEngineData, emitter: TSceneEmmitter) {
+  constructor(data: TFightEngineData<T>, emitter: TSceneEmmitter) {
     super(data, emitter)
   }
 
-  render(canvas: HTMLCanvasElement) {
+  render(canvas: HTMLCanvasElement, props: TFightEngineConfig['baseData'], config: TGameConfig) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     this.ctx = ctx
@@ -97,9 +100,91 @@ class FightEngine extends InteractiveSceneBaseEngine<TFightEngineData> {
     this.boxW = canvas.width
     this.boxH = canvas.height
 
+    const schema = config?.charsSchema
+    if (!schema) return
+    const playerStats = this.emitter.getCharacteristics()
+    const playerChars: FighterChars = {
+      main: {},
+      effects: {}
+    }
+    const enemyChars: FighterChars[] = []
+
+    for (const key in playerStats) {
+      const item = schema.main[key]
+      const value = playerStats[key]
+      if (item.kind === 'info' && typeof value === 'string') {
+        const obj: FighterStringStat = {
+          ...item,
+          value
+        }
+        playerChars.main[key] = obj
+      } else if (item.kind === 'number') {
+        const obj: FighterNumberStat = {
+          ...item,
+          ...(item.typeView === 'range' && Array.isArray(value)
+            ? {
+                baseVal: value[0],
+                currVal: value[1]
+              }
+            : {
+                baseVal: value,
+                currVal: value
+              })
+        }
+        playerChars.main[key] = obj
+      }
+    }
+
+    for (const enemy of props.enemies) {
+      const enemyChar: FighterChars = {
+        main: {},
+        effects: {}
+      }
+
+      for (const key in enemy.chars) {
+        const item = schema.main[key]
+        const value = enemy.chars[key]
+        if (item.kind === 'info' && typeof value === 'string') {
+          const obj: FighterStringStat = {
+            ...item,
+            value
+          }
+          enemyChar.main[key] = obj
+        } else if (item.kind === 'number') {
+          const obj: FighterNumberStat = {
+            ...item,
+            ...(item.typeView === 'range' && Array.isArray(value)
+              ? {
+                  baseVal: value[0],
+                  currVal: value[1]
+                }
+              : {
+                  baseVal: value,
+                  currVal: value
+                })
+          }
+          enemyChar.main[key] = obj
+        }
+      }
+
+      enemyChars.push(enemyChar)
+    }
+
+    const fProps: FightTemplateProps = {
+      gameId: config.name,
+      playerChars,
+      enemyChars,
+      schema,
+      weapons: config.inventory?.filter((f) => f.type === 'weapon') || [],
+      enemyWeapons: props.enemies[0].weapons,
+      fightResults: {
+        success: { type: EActionType.GoToScene, nextId: 'intro1' }, // где взять
+        fail: { type: EActionType.GoToScene, nextId: 'intro1' }
+      }
+    }
     // stats
     // timer for tempMode
-    this.emitter.setCustomOverlayComponent(FightTemplate)
+    this.emitter.setCustomOverlayComponent(FightTemplate, fProps)
 
     const playingArea = new PlayingArea(characters)
     playingArea.start()

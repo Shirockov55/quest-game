@@ -28,7 +28,8 @@
             <div v-if="'actions' in currTree" class="message-box__action-btns">
               <div v-if="currTree.actions?.length" class="action-btns">
                 <button
-                  v-for="btn in currTree.actions"
+                  v-for="(btn, i) in currTree.actions"
+                  :key="i"
                   @click="btnClick(btn.action)"
                   class="action-btn"
                   type="button"
@@ -50,8 +51,9 @@
               </p>
               <div v-if="currTree.companion.answers.length" class="action-btns">
                 <button
-                  v-for="btn in currTree.companion.answers"
+                  v-for="(btn, i) in currTree.companion.answers"
                   @click="btnClick(btn.action)"
+                  :key="i"
                   class="action-btn"
                   type="button"
                 >
@@ -68,8 +70,8 @@
 
 <script setup lang="ts">
 import type { TScene, TAction, TextTree } from '@/types'
-import { EActionType } from '@/constants'
-import { onMounted, onUnmounted, ref, computed, reactive, useTemplateRef } from 'vue'
+import { EActionType, PROVIDE_CONFIG } from '@/constants'
+import { onMounted, onUnmounted, ref, computed, reactive, useTemplateRef, inject } from 'vue'
 import { CANVAS_ID } from './constants'
 import { getImageUrl } from '@/helpers'
 
@@ -87,6 +89,8 @@ const imageUrl = () => {
 
 const imageRef = useTemplateRef<HTMLImageElement>('imageRef')
 const canvasSize = reactive({ w: '100%', h: '100%' })
+
+const config = inject(PROVIDE_CONFIG)
 
 const emptyTree: TextTree = {
   id: 'empty',
@@ -121,6 +125,7 @@ const runInteractive = () => {
   }
 
   const engine = interactive.engine
+  const baseData = interactive.baseData
   const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement
   if (!canvas) return
 
@@ -137,7 +142,7 @@ const runInteractive = () => {
 
   setTimeout(() => {
     // TODO: Make after image load and delete timeout
-    engine.render(canvas)
+    engine.render(canvas, baseData, config!)
   }, 500)
 }
 

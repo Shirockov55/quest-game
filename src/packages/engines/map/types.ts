@@ -44,4 +44,11 @@ export interface TMapEngineData extends TBaseInterractiveData {
 export interface TMapEngineConfig {
   type: 'map'
   engine: InteractiveSceneBaseEngine<TMapEngineData>
+  baseData: {}
+}
+
+export interface TMapStore {
+  activeZoneX: number
+  activeZoneY: number
+  openedSectors: Record<number, Record<number, boolean>>
 }

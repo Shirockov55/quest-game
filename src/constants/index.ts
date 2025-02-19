@@ -1,4 +1,4 @@
-import type { TScene, TSceneEmmitter } from '@/types'
+import type { TGameConfig, TSceneEmmitter } from '@/types'
 import type { InjectionKey } from 'vue'
 
 export const enum EActionType {
@@ -8,4 +8,4 @@ export const enum EActionType {
 }
 
 export const PROVIDE_EMITTER: InjectionKey<TSceneEmmitter> = Symbol('provide-emmiter')
-export const PROVIDE_SCENES: InjectionKey<Record<string, TScene>> = Symbol('provide-scenes')
+export const PROVIDE_CONFIG: InjectionKey<TGameConfig> = Symbol('provide-config')

@@ -1,31 +1,34 @@
 import type { TMapEngineConfig } from '@/packages/engines/map'
-import type { TFightEngineConfig } from '@/packages/engines/fight'
+import type { TFightEngineConfig, FighterCharsCfg } from '@/packages/engines/fight'
 
 import type { TSceneTransition } from './common'
 import type { TSceneEmmitter } from './engines'
 import type { TextTree } from './sceneTrees'
+import type { TInventory } from './inventory'
 
 export type TSceneType = 'static' | 'interactive' | 'temp'
 
-export interface TScene {
+export interface TScene<TStats = Record<string, unknown>> {
   image: string
   textTrees: TextTree[]
   baseSceneType?: TSceneType
   audio?: string
   transition?: TSceneTransition
   additional?: {
-    interactive?: TInteractive
+    interactive?: TMapEngineConfig | TFightEngineConfig<TStats>
   }
   textBoxAbsolute?: boolean
 }
 
 export type TInteractive = TMapEngineConfig | TFightEngineConfig
 
-export interface TGameConfig {
+export interface TGameConfig<TStats = Record<string, unknown>> {
   name: string
   baseScene: string
-  scenes: Record<string, TScene>
-  inventory?: any[]
+  scenes: Record<string, TScene<TStats>>
+  charsSchema?: FighterCharsCfg<TStats>
+  playerChars?: TStats
+  inventory?: TInventory<TStats>[]
 }
 
 export type TAdapterGameConfig = TGameConfig | ((emitter: TSceneEmmitter) => TGameConfig)

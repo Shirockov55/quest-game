@@ -9,12 +9,13 @@
       />
       <div v-if="isPlayerStep" class="fight-template__actions fight-frame fight-actions-list">
         <div
-          @click="clickOnAction(action, 'player', 'enemy')"
-          v-for="action in playerActions"
+          v-for="(weapon, i) in props.weapons"
+          @click="clickOnAction(weapon, 'player', 'enemy')"
+          :key="i"
           class="fight-actions-list__item"
-          :aria-disabled="action.disabled?.(allStats['player'], allStats['enemy']) || false"
+          :aria-disabled="weapon.props.disabled?.(allStats['player'], allStats['enemy']) || false"
         >
-          {{ action.label }}
+          {{ weapon.label }}
         </div>
       </div>
     </div>
@@ -30,10 +31,10 @@
         class="fight-template__actions fight-template__actions_reversed fight-frame fight-actions-list"
       >
         <div
-          @click="clickOnAction(action, 'enemy', 'player')"
-          v-for="action in enemyActions"
+          v-for="(action, i) in props.enemyWeapons"
+          :key="i"
           class="fight-actions-list__item"
-          :aria-disabled="action.disabled?.(allStats['enemy'], allStats['player']) || false"
+          :aria-disabled="action.props.disabled?.(allStats['enemy'], allStats['player']) || false"
         >
           {{ action.label }}
         </div>
@@ -44,21 +45,17 @@
 
 <script setup lang="ts">
 import { ref, inject, nextTick } from 'vue'
-import {
-  FighterCard,
-  type FightAction,
-  type FighterNumberStat,
-  type FighterStat
-} from '../FighterCard'
+import { FighterCard } from '../FighterCard'
 
 import { getImageUrl } from '@/helpers'
 import { watch } from 'vue'
-import { EActionType, PROVIDE_EMITTER, PROVIDE_SCENES } from '@/constants'
+import { PROVIDE_EMITTER } from '@/constants'
+import type { FightTemplateProps, FighterStat, FighterNumberStat } from '../../types'
+import type { TWeaponInventory } from '@/types'
 
-defineProps<{ gameId: string }>()
+const props = defineProps<FightTemplateProps>()
 
 const emitter = inject(PROVIDE_EMITTER)
-const scenes = inject(PROVIDE_SCENES)
 
 const isPlayerStep = ref(true)
 const isShaking = ref({
@@ -78,214 +75,10 @@ const shakeElement = (target: 'player' | 'enemy') => {
   return promise
 }
 
-const randCub = () => {
-  const res = Math.ceil(Math.random() * 6)
-  console.log('rand cub with:', res)
-  return res
-}
-
-const allStats = ref<Record<'player' | 'enemy', FighterStat[]>>({
-  player: [
-    {
-      id: 'name',
-      kind: 'info',
-      label: 'Имя',
-      value: 'Hero'
-    },
-    {
-      id: 'attack',
-      kind: 'number',
-      typeView: 'single',
-      label: 'Атака',
-      baseVal: 5,
-      currVal: 5
-    },
-    {
-      id: 'defence',
-      kind: 'number',
-      typeView: 'single',
-      label: 'Защита',
-      baseVal: 3,
-      currVal: 3
-    },
-    {
-      id: 'health',
-      kind: 'number',
-      typeView: 'range',
-      label: 'Здоровье',
-      baseVal: 30,
-      currVal: 28
-    },
-    {
-      id: 'mana',
-      kind: 'number',
-      typeView: 'range',
-      label: 'Мана',
-      baseVal: 20,
-      currVal: 25
-    },
-    {
-      id: 'fresh',
-      kind: 'effect',
-      value: 'Отдохнувший',
-      isPositive: true
-    },
-    {
-      id: 'tripper',
-      kind: 'effect',
-      value: 'Подцепил трипер',
-      isPositive: false
-    }
-  ],
-  enemy: [
-    {
-      id: 'name',
-      kind: 'info',
-      label: 'Монстро',
-      value: 'Hero'
-    },
-    {
-      id: 'attack',
-      kind: 'number',
-      typeView: 'single',
-      label: 'Атака',
-      baseVal: 3,
-      currVal: 30
-      // currVal: 3
-    },
-    {
-      id: 'defence',
-      kind: 'number',
-      typeView: 'single',
-      label: 'Защита',
-      baseVal: 5,
-      currVal: 5
-    },
-    {
-      id: 'health',
-      kind: 'number',
-      typeView: 'range',
-      label: 'Здоровье',
-      baseVal: 100,
-      currVal: 100
-    },
-    {
-      id: 'mana',
-      kind: 'number',
-      typeView: 'range',
-      label: 'Мана',
-      baseVal: 20,
-      currVal: 0
-    }
-  ]
+const allStats = ref({
+  player: props.playerChars.main,
+  enemy: props.enemyChars[0].main
 })
-
-const playerActions: FightAction[] = [
-  {
-    id: 'pistol',
-    label: 'Выстрелить из пистолета',
-    effect: (ownStats: FighterStat[], enemyStats: FighterStat[]) => {
-      const attackStat =
-        (ownStats.find((stat) => stat.id === 'attack') as FighterNumberStat)?.currVal || 0
-      const attackRes = attackStat + randCub()
-
-      const defenceStat =
-        (enemyStats.find((stat) => stat.id === 'defence') as FighterNumberStat)?.currVal || 0
-      const defenceRes = defenceStat + randCub()
-
-      const attackDiff = Math.max(attackRes - defenceRes, 0)
-
-      return {
-        enemy: [
-          {
-            id: 'health',
-            diff: -attackDiff
-          }
-        ]
-      }
-    }
-  },
-  {
-    id: 'mental',
-    label: 'Ментальный удар',
-    disabled: (statsPlayer: FighterStat[], statsEnemy: FighterStat[]) => {
-      const manaStat =
-        (statsPlayer.find((stat) => stat.id === 'mana') as FighterNumberStat)?.currVal || 0
-
-      return manaStat < 5
-    },
-    effect: (statsPlayer: FighterStat[], statsEnemy: FighterStat[]) => {
-      const attackRes = 6 + randCub()
-
-      const defenceStat =
-        (statsEnemy.find((stat) => stat.id === 'resistance') as FighterNumberStat)?.currVal || 0
-      const defenceRes = defenceStat + randCub()
-
-      const attackDiff = Math.max(attackRes - defenceRes, 0)
-
-      return {
-        player: [
-          {
-            id: 'mana',
-            diff: -5
-          }
-        ],
-        enemy: [
-          {
-            id: 'health',
-            diff: -attackDiff
-          }
-        ]
-      }
-    }
-  },
-  {
-    id: 'acid',
-    label: 'Кислота',
-    effect: (statsPlayer: FighterStat[], statsEnemy: FighterStat[]) => {
-      return {
-        enemy: [
-          {
-            id: 'defence',
-            diff: -1
-          }
-        ]
-      }
-    }
-  }
-]
-
-const enemyActions: FightAction[] = [
-  {
-    id: 'blow',
-    label: 'Удар',
-    effect: (ownStats: FighterStat[], enemyStats: FighterStat[]) => {
-      const attackStat =
-        (ownStats.find((stat) => stat.id === 'attack') as FighterNumberStat)?.currVal || 0
-      const attackRes = attackStat + randCub()
-
-      const defenceStat =
-        (enemyStats.find((stat) => stat.id === 'defence') as FighterNumberStat)?.currVal || 0
-      const defenceRes = defenceStat + randCub()
-
-      const attackDiff = Math.max(attackRes - defenceRes, 0)
-
-      return {
-        enemy: [
-          {
-            id: 'health',
-            diff: -attackDiff
-          }
-        ]
-      }
-    }
-  }
-]
-
-const allActions = {
-  player: playerActions,
-  enemy: enemyActions
-}
 
 const getNextPlayer = () => {
   isPlayerStep.value = !isPlayerStep.value
@@ -293,7 +86,7 @@ const getNextPlayer = () => {
 
 watch(isPlayerStep, async (val) => {
   if (!val) {
-    clickOnAction(allActions.enemy[0], 'enemy', 'player')
+    clickOnAction(props.enemyWeapons[0], 'enemy', 'player')
   }
 })
 
@@ -304,47 +97,48 @@ const getNewStatsAfterEffects = (
     diff: number | boolean
   }>
 ) => {
-  const newStatsEnemy: FighterStat[] = JSON.parse(JSON.stringify(allStats.value[targetKey]))
-
+  const newStatsEnemy: Record<string, FighterStat> = JSON.parse(
+    JSON.stringify(allStats.value[targetKey])
+  )
   for (const effect of effectRes) {
-    const findedStat = newStatsEnemy.find((stat) => stat.id === effect.id)
+    const findedStat = newStatsEnemy[effect.id]
     if (!findedStat || findedStat.kind === 'info') continue
 
     if (typeof effect.diff === 'number' && findedStat.kind === 'number') {
       const newVal = findedStat.currVal + effect.diff
       findedStat.currVal = Math.max(newVal, 0)
-    } else if (typeof effect.diff === 'boolean' && findedStat.kind === 'effect') {
-      findedStat.isPositive = effect.diff
     }
+    // else if (typeof effect.diff === 'boolean' && findedStat.kind === 'effect') {
+    //   findedStat.isPositive = effect.diff
+    // }
     console.log(`Эффект на ${targetKey}`, findedStat.label, effect.diff)
   }
 
   return newStatsEnemy
 }
 
-const checkEndFight = (newStats: FighterStat[]) => {
-  const healthStat = newStats.find((stat) => stat.id === 'health' && stat.kind === 'number') as
-    | FighterNumberStat
-    | undefined
+const checkEndFight = (newStats: Record<string, FighterStat>) => {
+  const healthStat = newStats['health'] as FighterNumberStat | undefined
   if (!healthStat) return null
 
   return healthStat.currVal <= 0
 }
 
 const clickOnAction = async (
-  action: FightAction,
+  action: TWeaponInventory,
   playerKey: 'player' | 'enemy',
   enemyKey: 'player' | 'enemy'
 ) => {
-  const findedAction = allActions[playerKey].find((a) => a.id === action.id)
+  const findedAction = (playerKey === 'player' ? props.weapons : props.enemyWeapons).find(
+    (a) => a.id === action.id
+  )
   if (!findedAction) return
 
   await shakeElement(enemyKey)
 
-  const effectRes = findedAction.effect(allStats.value[playerKey], allStats.value[enemyKey])
+  const effectRes = findedAction.props.effect(props.playerChars, props.enemyChars[0])
 
-  allStats.value[enemyKey] = getNewStatsAfterEffects(enemyKey, effectRes.enemy)
-
+  allStats.value[enemyKey] = getNewStatsAfterEffects(enemyKey, effectRes.enemy || [])
   if (effectRes.player) {
     allStats.value[playerKey] = getNewStatsAfterEffects(playerKey, effectRes.player)
   }
@@ -353,21 +147,35 @@ const clickOnAction = async (
 
   if (checkEndFight(allStats.value[enemyKey])) {
     emitter?.setCustomOverlayComponent(null)
-    emitter?.setCharacteristics(allStats.value[playerKey])
-    emitter?.setAction({
-      type: EActionType.GoToScene,
-      nextId: 'rip'
-    })
+    emitter?.setCharacteristics(formatPlayerStatsToStore())
+    emitter?.setAction(props.fightResults.success)
   } else if (checkEndFight(allStats.value[playerKey])) {
     emitter?.setCustomOverlayComponent(null)
-    emitter?.setCharacteristics(allStats.value[playerKey])
-    emitter?.setAction({
-      type: EActionType.GoToScene,
-      nextId: 'rip'
-    })
+    emitter?.setCharacteristics(formatPlayerStatsToStore())
+    emitter?.setAction(props.fightResults.fail)
   } else {
     getNextPlayer()
   }
+}
+
+const formatPlayerStatsToStore = () => {
+  const obj = Object.fromEntries(
+    Object.entries(allStats.value['player']).map(([id, stat]) => {
+      let val: unknown | undefined
+      switch (stat.kind) {
+        case 'number':
+          val = stat.currVal
+          break
+        // case 'effect':
+        case 'info':
+          val = stat.value
+          break
+      }
+
+      return [id, val]
+    })
+  )
+  return obj
 }
 </script>
 
