@@ -81,14 +81,14 @@ const round = (player: TСharacter) => {
   }
 }
 
-class FightEngine<T = Record<string, unknown>> extends InteractiveSceneBaseEngine<
-  TFightEngineData<T>
-> {
+class FightEngine<
+  T = Record<string, unknown>
+> extends InteractiveSceneBaseEngine<TFightEngineData> {
   ctx!: CanvasRenderingContext2D
   boxW = 0
   boxH = 0
 
-  constructor(data: TFightEngineData<T>, emitter: TSceneEmmitter) {
+  constructor(data: TFightEngineData, emitter: TSceneEmmitter) {
     super(data, emitter)
   }
 
@@ -105,7 +105,7 @@ class FightEngine<T = Record<string, unknown>> extends InteractiveSceneBaseEngin
     const playerStats = this.emitter.getCharacteristics()
     const playerChars: FighterChars = {
       main: {},
-      effects: {}
+      effects: schema.effects
     }
     const enemyChars: FighterChars[] = []
 
@@ -138,7 +138,7 @@ class FightEngine<T = Record<string, unknown>> extends InteractiveSceneBaseEngin
     for (const enemy of props.enemies) {
       const enemyChar: FighterChars = {
         main: {},
-        effects: {}
+        effects: enemy.effects
       }
 
       for (const key in enemy.chars) {
@@ -169,8 +169,8 @@ class FightEngine<T = Record<string, unknown>> extends InteractiveSceneBaseEngin
 
       enemyChars.push(enemyChar)
     }
-
-    const fProps: FightTemplateProps = {
+    // TODO: сделать массив для нескольких бойцов
+    const fProps = {
       gameId: config.name,
       playerChars,
       enemyChars,
@@ -181,7 +181,7 @@ class FightEngine<T = Record<string, unknown>> extends InteractiveSceneBaseEngin
         success: { type: EActionType.GoToScene, nextId: 'intro1' }, // где взять
         fail: { type: EActionType.GoToScene, nextId: 'intro1' }
       }
-    }
+    } satisfies FightTemplateProps
     // stats
     // timer for tempMode
     this.emitter.setCustomOverlayComponent(FightTemplate, fProps)

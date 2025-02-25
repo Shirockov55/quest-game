@@ -6,7 +6,7 @@ import type { TFightStats } from './types'
 import type { FighterCharsCfg, TFightWeapon } from '@/packages/engines/fight'
 import type { TWeaponInventory } from '@/types'
 
-export const charsSchema: FighterCharsCfg<TFightStats> = {
+export const charsSchema = {
   main: {
     name: {
       kind: 'info',
@@ -50,7 +50,7 @@ export const charsSchema: FighterCharsCfg<TFightStats> = {
       isPositive: false
     }
   }
-}
+} satisfies FighterCharsCfg<TFightStats>
 
 export const weapons: Record<string, TFightWeapon<TFightStats>> = {
   blow: {
@@ -95,7 +95,7 @@ export const weapons: Record<string, TFightWeapon<TFightStats>> = {
   },
   mental: {
     disabled: (statsPlayer) => {
-      const manaStat = statsPlayer.mana.currVal || 0
+      const manaStat = statsPlayer.main.mana.currVal || 0
       return manaStat < 5
     },
     effect: (_, statsEnemy) => {
@@ -178,12 +178,12 @@ export const enemies: Record<string, TFightStats> = {
     attack: 3,
     defence: 5,
     resistance: 2,
-    health: 100,
-    mana: 0
+    health: [100, 100],
+    mana: [0, 0]
   }
 }
 
-export const fightBaseData: TFightEngineData<TFightStats> = {
+export const fightBaseData: TFightEngineData = {
   gameId: GAME_ID,
   sceneId: ScenesIds.Monster
 }

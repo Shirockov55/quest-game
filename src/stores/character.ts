@@ -12,7 +12,7 @@ export const useCharacterStore = defineStore('character', () => {
     return collection.value[key] || null
   }
 
-  const getFullData = <T = unknown>(): Record<string, T> => {
+  const getFullData = () => {
     return collection.value
   }
 

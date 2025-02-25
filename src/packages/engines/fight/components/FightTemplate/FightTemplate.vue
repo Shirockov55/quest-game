@@ -45,6 +45,7 @@
 
 <script setup lang="ts">
 import { ref, inject, nextTick } from 'vue'
+import clone from 'lodash.clonedeep'
 import { FighterCard } from '../FighterCard'
 
 import { getImageUrl } from '@/helpers'
@@ -76,8 +77,8 @@ const shakeElement = (target: 'player' | 'enemy') => {
 }
 
 const allStats = ref({
-  player: props.playerChars.main,
-  enemy: props.enemyChars[0].main
+  player: props.playerChars,
+  enemy: props.enemyChars[0]
 })
 
 const getNextPlayer = () => {
@@ -97,11 +98,9 @@ const getNewStatsAfterEffects = (
     diff: number | boolean
   }>
 ) => {
-  const newStatsEnemy: Record<string, FighterStat> = JSON.parse(
-    JSON.stringify(allStats.value[targetKey])
-  )
+  const newStatsEnemy = clone(allStats.value[targetKey])
   for (const effect of effectRes) {
-    const findedStat = newStatsEnemy[effect.id]
+    const findedStat = newStatsEnemy.main[effect.id]
     if (!findedStat || findedStat.kind === 'info') continue
 
     if (typeof effect.diff === 'number' && findedStat.kind === 'number') {
@@ -145,11 +144,11 @@ const clickOnAction = async (
 
   await nextTick()
 
-  if (checkEndFight(allStats.value[enemyKey])) {
+  if (checkEndFight(allStats.value[enemyKey].main)) {
     emitter?.setCustomOverlayComponent(null)
     emitter?.setCharacteristics(formatPlayerStatsToStore())
     emitter?.setAction(props.fightResults.success)
-  } else if (checkEndFight(allStats.value[playerKey])) {
+  } else if (checkEndFight(allStats.value[playerKey].main)) {
     emitter?.setCustomOverlayComponent(null)
     emitter?.setCharacteristics(formatPlayerStatsToStore())
     emitter?.setAction(props.fightResults.fail)
@@ -160,7 +159,7 @@ const clickOnAction = async (
 
 const formatPlayerStatsToStore = () => {
   const obj = Object.fromEntries(
-    Object.entries(allStats.value['player']).map(([id, stat]) => {
+    Object.entries(allStats.value['player'].main).map(([id, stat]) => {
       let val: unknown | undefined
       switch (stat.kind) {
         case 'number':

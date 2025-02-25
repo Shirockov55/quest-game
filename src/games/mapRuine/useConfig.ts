@@ -174,6 +174,7 @@ export function useConfig(emitter: TSceneEmmitter) {
               enemies: [
                 {
                   chars: enemies.monstr1,
+                  effects: { tripper: charsSchema.effects.tripper },
                   weapons: [playerInventory[0]]
                 }
               ]

@@ -4,7 +4,7 @@
       <img :src="avatar" class="fighter-card__avatar" />
     </div>
     <div class="fighter-card__stats-box fighter-stats">
-      <div class="fighter-stats__item" v-for="(stat, key) in stats" :key="key">
+      <div class="fighter-stats__item" v-for="(stat, key) in stats.main" :key="key">
         <p class="fighter-stats__row" :class="`fighter-stats__row_${stat.kind}`">
           <template v-if="stat.kind === 'info'">
             <span class="fighter-stats__label">{{ stat.label }}:</span>
@@ -23,7 +23,7 @@
           </template>
         </p>
       </div>
-      <!-- <div class="fighter-stats__item" v-for="(stat, key) in stats.effects" :key="key">
+      <div class="fighter-stats__item" v-for="(stat, key) in stats.effects" :key="key">
         <p class="fighter-stats__row" :class="`fighter-stats__row_${stat.kind}`"></p>
         {{ stat.isPositive ? '+' : '-' }}
         <span
@@ -31,17 +31,17 @@
           :class="`fighter-stats__value_${stat.isPositive ? 'good' : 'bad'}`"
           >{{ stat.label }}</span
         >
-      </div> -->
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { FighterStat } from '../../types'
+import type { FighterChars } from '../../types'
 
 interface FighterCardProps {
   avatar: string
-  stats: Record<string, FighterStat>
+  stats: FighterChars
 }
 
 const { avatar, stats } = defineProps<FighterCardProps>()

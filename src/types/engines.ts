@@ -6,7 +6,7 @@ export interface TSceneEmmitter {
   setAction(action: TAction): void
   getState<T = unknown>(sceneId: string): T | null
   setState<T = unknown>(sceneId: string, state: T): void
-  getCharacteristics<T = unknown>(): Record<string, T>
+  getCharacteristics(): Record<string, unknown>
   setCharacteristics<T = unknown>(state: Record<string, T>): void
   setCustomOverlayComponent(
     component: InstanceType<any> | null,

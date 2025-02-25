@@ -13,6 +13,7 @@ export interface TFightEngineConfig<TStats = Record<string, unknown>> {
   baseData: {
     enemies: {
       chars: TStats
+      effects: Record<string, FighterEffectCfgStat>
       weapons: TWeaponInventory<TStats>[]
     }[]
   }
@@ -51,7 +52,13 @@ export interface FighterEffectCfgStat {
 }
 
 export interface FighterCharsCfg<TStats = Record<string, unknown>> {
-  main: Record<keyof TStats, FighterStringCfgStat | FighterNumberCfgStat>
+  main: {
+    [key in keyof TStats]: TStats[key] extends number | number[]
+      ? FighterNumberCfgStat
+      : TStats[key] extends string
+        ? FighterStringCfgStat
+        : FighterNumberCfgStat | FighterStringCfgStat
+  }
   effects: Record<string, FighterEffectCfgStat>
 }
 
@@ -68,8 +75,11 @@ export type FighterStat = FighterNumberStat | FighterStringStat
 
 export interface FighterChars<TStats = Record<string, unknown>> {
   main: {
-    [key in keyof TStats]: FighterStat
-    // [key in keyof TStats]: TStats[key] extends string ? FighterStringStat : FighterNumberStat
+    [key in keyof TStats]: TStats[key] extends number | number[]
+      ? FighterNumberStat
+      : TStats[key] extends string
+        ? FighterStringStat
+        : FighterStat
   }
   effects: Record<string, FighterEffectCfgStat>
 }
@@ -88,8 +98,5 @@ export interface TFightWeapon<TStats = Record<string, unknown>> {
       diff: number | boolean
     }[]
   }
-  disabled?: (
-    statsPlayer: Record<string, FighterStat>,
-    statsEnemy: Record<string, FighterStat>
-  ) => boolean
+  disabled?: (statsPlayer: FighterChars<TStats>, statsEnemy: FighterChars<TStats>) => boolean
 }
