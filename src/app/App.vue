@@ -1,12 +1,9 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-</script>
-
 <template>
   <header class="app-header">
     <div class="wrapper">
       <nav>
         <RouterLink to="/">Home</RouterLink>
+        <AuthWidget />
       </nav>
     </div>
   </header>
@@ -14,6 +11,16 @@ import { RouterLink, RouterView } from 'vue-router'
     <RouterView />
   </div>
 </template>
+
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import AuthWidget from '@/widgets/auth/AuthWidget.vue'
+import { loadUser } from '@/entities/user/model'
+
+onMounted(async () => {
+  await loadUser()
+})
+</script>
 <style lang="scss">
 .app-header {
   display: none;
