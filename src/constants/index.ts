@@ -3,6 +3,7 @@ import type { InjectionKey } from 'vue'
 
 export const enum EActionType {
   GoToScene = 'GO_TO_SCENE',
+  GoBackToPrevScene = 'GO_BACK_TO_PREV_SCENE',
   GoToDialogTree = 'GO_TO_DIALOG_TREE',
   GoToInteractive = 'GO_TO_INTERACTIVE',
   CloseDialog = 'CLOSE_DIALOG'

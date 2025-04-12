@@ -176,18 +176,17 @@ export function useConfig(emitter: TSceneEmmitter) {
             baseData: {
               fightResults: {
                 success: {
-                  type: EActionType.GoToScene,
-                  nextId: ScenesIds.Map,
+                  type: EActionType.GoBackToPrevScene,
                   callbacks: {
-                    before: (emitter: TSceneEmmitter, { lastSceneId }: TSceneActionContext) => {
-                      if (!lastSceneId) return
-                      const mapState = emitter.getState<TMapStore>(lastSceneId)
+                    before: (emitter: TSceneEmmitter, { prevSceneId }: TSceneActionContext) => {
+                      if (!prevSceneId) return
+                      const mapState = emitter.getState<TMapStore>(prevSceneId)
                       if (!mapState) return
 
                       mapState.eventCells.delete('5:7')
                       mapState.eventCells.delete('5:8')
                       mapState.eventCells.delete('6:7')
-                      emitter.setState<TMapStore>(lastSceneId, mapState)
+                      emitter.setState<TMapStore>(prevSceneId, mapState)
                     }
                   }
                 },

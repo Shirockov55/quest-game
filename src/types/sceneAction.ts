@@ -2,7 +2,7 @@ import type { EActionType } from '@/constants'
 import type { TSceneEmmitter } from './engines'
 
 export interface TSceneActionContext {
-  lastSceneId: string | null
+  prevSceneId: string | null
 }
 
 export interface TSceneEmmitCallbacks {
@@ -20,6 +20,10 @@ export interface TGoToSceneAction extends TBaseSceneAction {
   nextId: string
 }
 
+export interface TBackToPrevSceneAction extends TBaseSceneAction {
+  type: EActionType.GoBackToPrevScene
+}
+
 export interface TGoToDialogTreeAction extends TBaseSceneAction {
   type: EActionType.GoToDialogTree
   nextId: string
@@ -35,6 +39,7 @@ export interface TCloseDialogAction extends TBaseSceneAction {
 
 export type TAction =
   | TGoToSceneAction
+  | TBackToPrevSceneAction
   | TGoToDialogTreeAction
   | TGoToInteractive
   | TCloseDialogAction

@@ -49,19 +49,23 @@ const lockInteractive = ref(false)
 const getContext = () => {
   return {
     currentSceneId: currId.value,
-    lastSceneId: lastId.value,
+    prevSceneId: prevId.value,
     lockInteractive: lockInteractive.value
   }
 }
 
 const actionHandler = (action: TAction) => {
-  const { lastSceneId } = getContext()
-  action.callbacks?.before?.(emitter, { lastSceneId })
+  const { prevSceneId } = getContext()
+  action.callbacks?.before?.(emitter, { prevSceneId })
 
   switch (action.type) {
     case EActionType.GoToScene:
       lockInteractive.value = false
       goToScene(action.nextId)
+      break
+    case EActionType.GoBackToPrevScene:
+      lockInteractive.value = false
+      if (prevSceneId) goToScene(prevSceneId)
       break
     case EActionType.GoToDialogTree:
       sceneRef.value?.goToDialogTree(action.nextId)
@@ -72,7 +76,7 @@ const actionHandler = (action: TAction) => {
       break
   }
 
-  action.callbacks?.after?.(emitter, { lastSceneId })
+  action.callbacks?.after?.(emitter, { prevSceneId })
 }
 
 const { setData, getData } = useSceneStore()
@@ -116,7 +120,7 @@ if (config.playerChars) {
 }
 
 const currId = ref(config.baseScene)
-const lastId = ref<string | null>(null)
+const prevId = ref<string | null>(null)
 const currScene = ref<TScene>(scenes[currId.value])
 
 provide(PROVIDE_CONFIG, config)
@@ -130,7 +134,7 @@ const goToScene = (nextId: string) => {
   const newScene = scenes[nextId]
   if (!newScene) return
 
-  lastId.value = currId.value
+  prevId.value = currId.value
   currId.value = nextId
   currScene.value = newScene
 }
