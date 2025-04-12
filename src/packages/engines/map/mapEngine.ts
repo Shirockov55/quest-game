@@ -61,6 +61,9 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
     this.drawCanvas()
 
     canvas.addEventListener('click', ({ offsetX, offsetY }) => {
+      const { lockInteractive } = this.emitter.getContext()
+      if (lockInteractive) return
+
       const partX = Math.round((offsetX / this.boxW) * 10000) / 10000
       const partY = Math.round((offsetY / this.boxH) * 10000) / 10000
       const rectX = Math.floor(partX * this.data.grid.x)
@@ -137,6 +140,8 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
           //
           break
         case 'event': {
+          if (eSector.lockInteractive) this.emitter.lockInteractive(true)
+
           const callback = (img?: HTMLImageElement) => {
             this.drawVisibilityZone(x, y, x1, y1, cellW, cellH, { img })
 

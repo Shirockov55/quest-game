@@ -17,6 +17,7 @@ export interface TEnemySectorEvent {
   image?: string
   imageOnFog?: string
   action: TAction
+  lockInteractive?: boolean
 }
 
 export type TSectorEventTypeUnion = TTextTypeSectorEvent | TLockTypeSectorEvent | TEnemySectorEvent

@@ -44,13 +44,24 @@ const customOverlayComponent = shallowRef<{
   props?: Record<string, unknown> | null
 } | null>(null)
 
+const lockInteractive = ref(false)
+
+const getContext = () => {
+  return { lockInteractive: lockInteractive.value }
+}
+
 const actionHandler = (action: TAction) => {
   switch (action.type) {
     case EActionType.GoToScene:
+      lockInteractive.value = false
       goToScene(action.nextId)
       break
     case EActionType.GoToDialogTree:
       sceneRef.value?.goToDialogTree(action.nextId)
+      break
+    case EActionType.CloseDialog:
+      lockInteractive.value = false
+      sceneRef.value?.goToDialogTree(null)
       break
   }
 }
@@ -64,6 +75,10 @@ const setCharacteristics = (state: Record<string, unknown>) => {
 
 const emitter: TSceneEmmitter = {
   setAction: actionHandler,
+  lockInteractive: (val: boolean) => {
+    lockInteractive.value = val
+  },
+  getContext,
   getState: getData,
   setState: setData,
   getCharacteristics: getAllChars,

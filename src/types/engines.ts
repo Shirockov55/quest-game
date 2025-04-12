@@ -4,6 +4,8 @@ import type { TGameConfig } from './gameConfig'
 
 export interface TSceneEmmitter {
   setAction(action: TAction): void
+  getContext(): { lockInteractive: boolean }
+  lockInteractive(val: boolean): void
   getState<T = unknown>(sceneId: string): T | null
   setState<T = unknown>(sceneId: string, state: T): void
   getCharacteristics(): Record<string, unknown>

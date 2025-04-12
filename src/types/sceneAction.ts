@@ -15,7 +15,15 @@ export interface TGoToInteractive {
   type: EActionType.GoToInteractive
 }
 
-export type TAction = TGoToSceneAction | TGoToDialogTreeAction | TGoToInteractive
+export interface TCloseDialogAction {
+  type: EActionType.CloseDialog
+}
+
+export type TAction =
+  | TGoToSceneAction
+  | TGoToDialogTreeAction
+  | TGoToInteractive
+  | TCloseDialogAction
 
 export interface TActionBtn {
   text: string

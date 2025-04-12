@@ -154,6 +154,12 @@ export function useConfig(emitter: TSceneEmmitter) {
                     type: EActionType.GoToScene,
                     nextId: ScenesIds.Monster
                   }
+                },
+                {
+                  text: '[Убежать]',
+                  action: {
+                    type: EActionType.CloseDialog
+                  }
                 }
               ]
             }

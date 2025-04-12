@@ -31,6 +31,7 @@ export const mapBaseDynamicData: TMapStore = {
         type: 'event',
         imageOnFog: 'enemy1-fog.jpg',
         image: 'enemy1.jpg',
+        lockInteractive: true,
         action: {
           type: EActionType.GoToDialogTree,
           nextId: ETextTreeIds.MonsterToFight

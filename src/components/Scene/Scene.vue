@@ -102,7 +102,7 @@ const textTrees = computed(() => {
   return [emptyTree, ...data.textTrees]
 })
 const currTree = computed(() => {
-  return textTrees.value.find((tree) => tree.id === currTreeId.value)!
+  return textTrees.value.find((tree) => tree.id === currTreeId.value) || emptyTree
 })
 
 let audio: HTMLAudioElement | undefined
@@ -176,8 +176,8 @@ const btnClick = (action: TAction) => {
   }
 }
 
-const goToDialogTree = (textTreeId: string) => {
-  currTreeId.value = textTreeId
+const goToDialogTree = (textTreeId: string | null) => {
+  currTreeId.value = textTreeId ?? emptyTree.id
 }
 
 defineExpose({
