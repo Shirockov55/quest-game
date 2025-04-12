@@ -124,7 +124,7 @@ const runInteractive = () => {
     return
   }
 
-  const engine = interactive.engine
+  const engine = interactive.engine()
   const baseData = interactive.baseData
   const canvas = document.getElementById(CANVAS_ID) as HTMLCanvasElement
   if (!canvas) return

@@ -1,4 +1,9 @@
-import type { TMapEngineData, TEventCells, TTextTypeSectorEvent } from '@/packages/engines/map'
+import type {
+  TMapEngineData,
+  TEventCells,
+  TTextTypeSectorEvent,
+  TMapStore
+} from '@/packages/engines/map'
 import { EActionType } from '@/constants'
 
 import { ETextTreeIds, GAME_ID, ScenesIds } from './constants'
@@ -7,7 +12,10 @@ export const mapBaseData: TMapEngineData = {
   gameId: GAME_ID,
   sceneId: ScenesIds.Map,
   grid: { x: 8, y: 8 },
-  startCoord: { x: 8, y: 8 },
+  startCoord: { x: 8, y: 8 }
+}
+
+export const mapBaseDynamicData: TMapStore = {
   eventCells: (() => {
     const strangeMess: TTextTypeSectorEvent = {
       type: 'text',

@@ -1,13 +1,15 @@
-import { InteractiveSceneBaseEngine, type TSceneEmmitter } from '@/types'
-import { EActionType } from '@/constants'
-import type { TMapEngineData, TMapColors, TMapStore } from './types'
+import { InteractiveSceneBaseEngine, type TGameConfig, type TSceneEmmitter } from '@/types'
+import type { TMapEngineData, TMapColors, TMapStore, TEventCells } from './types'
 import { baseColors } from './constants'
+import clone from 'lodash.clonedeep'
 
 class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
   ctx!: CanvasRenderingContext2D
+  eventCells: TEventCells = new Map()
   // TODO: Replace Record to Map
   cells: Record<number, Record<number, Array<number>>> = {}
   openedSectors: Record<number, Record<number, boolean>> = {}
+  baseOpenedSectors: Record<number, Record<number, boolean>> = {}
   reducedFogSectors: Record<number, Record<number, boolean>> = {}
   activeZoneX: number
   activeZoneY: number
@@ -30,18 +32,28 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
     }
   }
 
-  render(canvas: HTMLCanvasElement) {
+  render(canvas: HTMLCanvasElement, props: TMapStore, config: TGameConfig) {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
     this.ctx = ctx
 
     const storeData = this.emitter.getState<TMapStore>(this.data.sceneId)
     if (!storeData) {
+      this.eventCells = props.eventCells
+
       this.emitter.setState<TMapStore>(this.data.sceneId, {
-        activeZoneX: this.activeZoneX,
-        activeZoneY: this.activeZoneY,
-        openedSectors: this.openedSectors
+        lastX: this.activeZoneX,
+        lastY: this.activeZoneY,
+        openedSectors: this.openedSectors,
+        eventCells: this.eventCells
       })
+    } else {
+      this.activeZoneX = storeData.lastX!
+      this.activeZoneY = storeData.lastY!
+      this.data.startCoord.x = this.activeZoneX + 1
+      this.data.startCoord.y = this.activeZoneY + 1
+      this.baseOpenedSectors = storeData.openedSectors!
+      this.eventCells = storeData.eventCells
     }
 
     this.boxW = canvas.width
@@ -80,12 +92,15 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
         if (!this.cells[j]) this.cells[j] = {}
         this.cells[j][i] = res
 
-        // FIXME: not possible to return to start coords position
-        if (j + 1 !== this.data.startCoord.x || i + 1 !== this.data.startCoord.y) {
-          this.ctx.fillStyle = this.colors.fullFogFill
-          this.ctx.fillRect(x1, y1, cellW, cellH)
-        } else {
+        if (j + 1 === this.data.startCoord.x && i + 1 === this.data.startCoord.y) {
           basePoint = [j, i, x1, y1]
+        } else {
+          if (this.baseOpenedSectors[j]?.[i]) {
+            this.showSector(j, i, true)
+            delete this.baseOpenedSectors[j]?.[i]
+          } else {
+            this.drawFullFog(x1, y1, cellW, cellH)
+          }
         }
       }
     }
@@ -97,12 +112,13 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
     }
   }
 
-  showSector(x: number, y: number) {
+  showSector(x: number, y: number, excludeRestrict = false) {
     const alreadyActive = this.activeZoneX === x && this.activeZoneY === y
-    const onRoad =
-      (this.activeZoneX === x && (this.activeZoneY === y - 1 || this.activeZoneY === y + 1)) ||
-      (this.activeZoneY === y && (this.activeZoneX === x - 1 || this.activeZoneX === x + 1))
-    const onFog = this.reducedFogSectors[x]?.[y]
+    const onFog = excludeRestrict ? true : this.reducedFogSectors[x]?.[y]
+    const onRoad = excludeRestrict // on neighbour cell
+      ? true
+      : (this.activeZoneX === x && (this.activeZoneY === y - 1 || this.activeZoneY === y + 1)) ||
+        (this.activeZoneY === y && (this.activeZoneX === x - 1 || this.activeZoneX === x + 1))
 
     if (!this.cells[x]?.[y] || alreadyActive || !onRoad || !onFog) return
 
@@ -110,15 +126,8 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
     this.ctx.fillStyle = this.colors.oldStepPointFill
     const [cellW, cellH] = this.getCellSizes()
 
-    const eSector = this.data.eventCells.get(`${x + 1}:${y + 1}`)
-    if (eSector) {
-      if (eSector.action.type === EActionType.GoToScene) {
-        if (eSector.action.withSaveState) {
-          // TODO: Save scene state in store
-          this.emitter.setState(this.data.sceneId, {})
-        }
-      }
-
+    const eSector = this.eventCells.get(`${x + 1}:${y + 1}`)
+    if (eSector && !excludeRestrict) {
       // TODO: Create locked events for map click
       // TODO: Make events appear once
       this.emitter.setAction(eSector.action)
@@ -127,18 +136,25 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
         case 'text':
           //
           break
-        case 'event':
-          if (eSector.image) {
-            this.loadImage(eSector.image, (img) => {
-              this.drawVisibilityZone(x, y, x1, y1, cellW, cellH, img)
+        case 'event': {
+          const callback = (img?: HTMLImageElement) => {
+            this.drawVisibilityZone(x, y, x1, y1, cellW, cellH, { img })
+
+            this.emitter.setState(this.data.sceneId, {
+              lastX: this.activeZoneX,
+              lastY: this.activeZoneY,
+              openedSectors: clone(this.openedSectors),
+              eventCells: clone(this.eventCells)
             })
-            return
           }
-          break
+
+          eSector.image ? this.loadImage(eSector.image, callback) : callback()
+          return
+        }
       }
     }
 
-    this.drawVisibilityZone(x, y, x1, y1, cellW, cellH)
+    this.drawVisibilityZone(x, y, x1, y1, cellW, cellH, { restrictActivePoint: excludeRestrict })
   }
 
   drawVisibilityZone(
@@ -148,26 +164,37 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
     y1Coord: number,
     cellW: number,
     cellH: number,
-    img?: HTMLImageElement
+    {
+      img,
+      restrictActivePoint
+    }: {
+      img?: HTMLImageElement
+      restrictActivePoint?: boolean
+    }
   ) {
     if (!img) {
-      this.drawActivePoint(x1Coord, y1Coord)
+      if (!restrictActivePoint) this.drawActivePoint(x1Coord, y1Coord)
     } else {
       this.ctx.drawImage(img, x1Coord, y1Coord, cellW, cellH)
     }
 
-    // Clearing last point
-    const [lastX1, , lastY1] = this.cells[this.activeZoneX][this.activeZoneY]
-    const eventSector = this.data.eventCells.get(`${this.activeZoneX + 1}:${this.activeZoneY + 1}`)
-    if (!eventSector || !('image' in eventSector)) {
-      // TODO: delete last text if not new events
-      this.ctx.clearRect(lastX1, lastY1, cellW, cellH)
+    if (!restrictActivePoint) {
+      // Clearing last point
+      const [lastX1, , lastY1] = this.cells[this.activeZoneX][this.activeZoneY]
+      const eventSector = this.eventCells.get(`${this.activeZoneX + 1}:${this.activeZoneY + 1}`)
+      if (!eventSector || !('image' in eventSector)) {
+        // TODO: delete last text if not new events
+        this.ctx.clearRect(lastX1, lastY1, cellW, cellH)
+      }
     }
 
     if (!this.openedSectors[xGrid]) this.openedSectors[xGrid] = {}
     this.openedSectors[xGrid][yGrid] = true
-    this.activeZoneX = xGrid
-    this.activeZoneY = yGrid
+
+    if (!restrictActivePoint) {
+      this.activeZoneX = xGrid
+      this.activeZoneY = yGrid
+    }
 
     this.drawReducedFogAroundPoint(xGrid, yGrid)
   }
@@ -188,7 +215,11 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
   drawReducedFogAroundPoint(x: number, y: number) {
     for (let i = -this.fogRange; i <= this.fogRange; i++) {
       for (let j = -this.fogRange; j <= this.fogRange; j++) {
-        if (j === 0 && i == 0) continue
+        if (j === 0 && i === 0) {
+          if (!this.reducedFogSectors[x]) this.reducedFogSectors[x] = {}
+          this.reducedFogSectors[x][y] = true
+          continue
+        }
         this.drawReducedFog(x + j, y + i)
       }
     }
@@ -199,7 +230,7 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
       return
 
     const [x1, , y1] = this.cells[x][y]
-    const eventSector = this.data.eventCells.get(`${x + 1}:${y + 1}`)
+    const eventSector = this.eventCells.get(`${x + 1}:${y + 1}`)
 
     if (eventSector && eventSector.type === 'event' && eventSector.imageOnFog) {
       const [cellW, cellH] = this.getCellSizes()
@@ -214,8 +245,17 @@ class MapEngine extends InteractiveSceneBaseEngine<TMapEngineData> {
       this.ctx.fillRect(x1, y1, cellW, cellH)
     }
 
+    this.setReducedFogSectors(x, y)
+  }
+
+  setReducedFogSectors(x: number, y: number) {
     if (!this.reducedFogSectors[x]) this.reducedFogSectors[x] = {}
     this.reducedFogSectors[x][y] = true
+  }
+
+  drawFullFog(x1: number, y1: number, cellW: number, cellH: number) {
+    this.ctx.fillStyle = this.colors.fullFogFill
+    this.ctx.fillRect(x1, y1, cellW, cellH)
   }
 }
 

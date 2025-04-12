@@ -37,18 +37,18 @@ export interface TMapColors {
 export interface TMapEngineData extends TBaseInterractiveData {
   grid: { x: number; y: number }
   startCoord: { x: number; y: number }
-  eventCells: TEventCells
   colors?: Partial<TMapColors>
 }
 
 export interface TMapEngineConfig {
   type: 'map'
-  engine: InteractiveSceneBaseEngine<TMapEngineData>
+  engine: () => InteractiveSceneBaseEngine<TMapEngineData>
   baseData: {}
 }
 
 export interface TMapStore {
-  activeZoneX: number
-  activeZoneY: number
-  openedSectors: Record<number, Record<number, boolean>>
+  eventCells: TEventCells
+  openedSectors?: Record<number, Record<number, boolean>>
+  lastX?: number
+  lastY?: number
 }

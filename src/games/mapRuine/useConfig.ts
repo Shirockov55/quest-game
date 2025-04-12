@@ -4,7 +4,7 @@ import { MapEngine, type TMapTree } from '@/packages/engines/map'
 import { FightEngine } from '@/packages/engines/fight'
 
 import { ETextTreeIds, GAME_ID, ScenesIds, ScenesImages } from './constants'
-import { mapBaseData } from './mapEngineConfig'
+import { mapBaseData, mapBaseDynamicData } from './mapEngineConfig'
 import {
   fightBaseData,
   charsSchema,
@@ -15,12 +15,9 @@ import {
 import type { TFightStats } from './types'
 
 export function useConfig(emitter: TSceneEmmitter) {
-  const mapEngine = new MapEngine(mapBaseData, emitter)
-  const fightEngine = new FightEngine<TFightStats>(fightBaseData, emitter)
-
   const gameConfig: TGameConfig<TFightStats> = {
     name: GAME_ID,
-    baseScene: ScenesIds.Monster,
+    baseScene: ScenesIds.Map,
     charsSchema: charsSchema,
     playerChars: playerChars,
     inventory: playerInventory,
@@ -131,8 +128,8 @@ export function useConfig(emitter: TSceneEmmitter) {
         additional: {
           interactive: {
             type: 'map',
-            engine: mapEngine,
-            baseData: {}
+            engine: () => new MapEngine(mapBaseData, emitter),
+            baseData: mapBaseDynamicData
           }
         },
         textTrees: [
@@ -169,7 +166,7 @@ export function useConfig(emitter: TSceneEmmitter) {
         additional: {
           interactive: {
             type: 'fight',
-            engine: fightEngine,
+            engine: () => new FightEngine<TFightStats>(fightBaseData, emitter),
             baseData: {
               enemies: [
                 {

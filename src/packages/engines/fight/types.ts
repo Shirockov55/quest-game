@@ -9,7 +9,7 @@ export interface TFightEngineData extends TBaseInterractiveData {}
 
 export interface TFightEngineConfig<TStats = Record<string, unknown>> {
   type: 'fight'
-  engine: InteractiveSceneBaseEngine<TFightEngineData>
+  engine: () => InteractiveSceneBaseEngine<TFightEngineData>
   baseData: {
     enemies: {
       chars: TStats

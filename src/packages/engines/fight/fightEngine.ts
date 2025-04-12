@@ -178,7 +178,7 @@ class FightEngine<
       weapons: config.inventory?.filter((f) => f.type === 'weapon') || [],
       enemyWeapons: props.enemies[0].weapons,
       fightResults: {
-        success: { type: EActionType.GoToScene, nextId: 'intro1' }, // где взять
+        success: { type: EActionType.GoToScene, nextId: 'map' }, // где взять
         fail: { type: EActionType.GoToScene, nextId: 'intro1' }
       }
     } satisfies FightTemplateProps
