@@ -11,6 +11,7 @@ export interface TFightEngineConfig<TStats = Record<string, unknown>> {
   type: 'fight'
   engine: () => InteractiveSceneBaseEngine<TFightEngineData>
   baseData: {
+    fightResults: TFightResults
     enemies: {
       chars: TStats
       effects: Record<string, FighterEffectCfgStat>

@@ -14,7 +14,6 @@ const nextPlayer = (lastPlayerId: string) => {
 }
 
 import { FightTemplate } from './components/FightTemplate'
-import { EActionType } from '@/constants'
 
 interface TСharacterCharacteristics {
   attack: number
@@ -177,10 +176,7 @@ class FightEngine<
       schema,
       weapons: config.inventory?.filter((f) => f.type === 'weapon') || [],
       enemyWeapons: props.enemies[0].weapons,
-      fightResults: {
-        success: { type: EActionType.GoToScene, nextId: 'map' }, // где взять
-        fail: { type: EActionType.GoToScene, nextId: 'intro1' }
-      }
+      fightResults: props.fightResults
     } satisfies FightTemplateProps
     // stats
     // timer for tempMode

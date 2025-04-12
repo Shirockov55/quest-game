@@ -47,10 +47,17 @@ const customOverlayComponent = shallowRef<{
 const lockInteractive = ref(false)
 
 const getContext = () => {
-  return { lockInteractive: lockInteractive.value }
+  return {
+    currentSceneId: currId.value,
+    lastSceneId: lastId.value,
+    lockInteractive: lockInteractive.value
+  }
 }
 
 const actionHandler = (action: TAction) => {
+  const { lastSceneId } = getContext()
+  action.callbacks?.before?.(emitter, { lastSceneId })
+
   switch (action.type) {
     case EActionType.GoToScene:
       lockInteractive.value = false
@@ -64,6 +71,8 @@ const actionHandler = (action: TAction) => {
       sceneRef.value?.goToDialogTree(null)
       break
   }
+
+  action.callbacks?.after?.(emitter, { lastSceneId })
 }
 
 const { setData, getData } = useSceneStore()
@@ -107,6 +116,7 @@ if (config.playerChars) {
 }
 
 const currId = ref(config.baseScene)
+const lastId = ref<string | null>(null)
 const currScene = ref<TScene>(scenes[currId.value])
 
 provide(PROVIDE_CONFIG, config)
@@ -120,6 +130,7 @@ const goToScene = (nextId: string) => {
   const newScene = scenes[nextId]
   if (!newScene) return
 
+  lastId.value = currId.value
   currId.value = nextId
   currScene.value = newScene
 }
