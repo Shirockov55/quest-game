@@ -28,13 +28,18 @@ const getRandomEnemies = (data: TMapEngineData, count = 10) => {
     const randY = Math.floor(Math.random() * data.grid.y)
     const key = getKeyFromCoords(randX, randY)
 
-    if (eventMapCells.has(key)) continue
+    if (
+      eventMapCells.has(key) ||
+      (data.startCoord.x - 1 === randX && data.startCoord.y - 1 === randY)
+    )
+      continue
 
     let foundNeighbour = false
     for (let i = -1; i <= 1; i++) {
       for (let j = -1; j <= 1; j++) {
         if (i === 0 && j === 0) continue
         const offsetKey = getKeyFromCoords(randX + i, randY + j)
+
         if (eventMapCells.has(offsetKey)) {
           foundNeighbour = true
           continue

@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import type { TScene, TAction, TextTree } from '@/types'
-import { EActionType, PROVIDE_CONFIG } from '@/constants'
+import { EActionType, PROVIDE_CONFIG, PROVIDE_EMITTER } from '@/constants'
 import { onMounted, onUnmounted, ref, computed, reactive, useTemplateRef, inject } from 'vue'
 import { CANVAS_ID } from './constants'
 import { getImageUrl } from '@/helpers'
@@ -82,6 +82,7 @@ interface SceneProps {
 
 const { gameId, data } = defineProps<SceneProps>()
 const emit = defineEmits<{ action: [action: TAction] }>()
+const emitter = inject(PROVIDE_EMITTER)
 
 const imageUrl = () => {
   return getImageUrl(gameId, data.image)
@@ -147,12 +148,14 @@ const runInteractive = () => {
 }
 
 onMounted(() => {
+  if (emitter && data.hooks?.before) data.hooks?.before(emitter)
   if (data.baseSceneType === 'interactive') runInteractive()
 })
 
 onUnmounted(() => {
   clearTimeout(timeout)
   audio?.pause()
+  if (emitter && data.hooks?.after) data.hooks?.after(emitter)
 })
 
 const updateCanvasSizeByImage = () => {

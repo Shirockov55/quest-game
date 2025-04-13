@@ -18,6 +18,10 @@ export interface TScene<TStats = Record<string, unknown>> {
     interactive?: TMapEngineConfig | TFightEngineConfig<TStats>
   }
   textBoxAbsolute?: boolean
+  hooks?: {
+    before?: (emitter: TSceneEmmitter) => void
+    after?: (emitter: TSceneEmmitter) => void
+  }
 }
 
 export type TInteractive = TMapEngineConfig | TFightEngineConfig

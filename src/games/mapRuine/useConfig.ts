@@ -1,6 +1,6 @@
 import { EActionType } from '@/constants'
 import type { TGameConfig, TSceneEmmitter, TextTree } from '@/types'
-import { MapEngine, returnStrategies, type TMapTree } from '@/packages/engines/map'
+import { MapEngine, returnStrategies, type TMapStore, type TMapTree } from '@/packages/engines/map'
 import { FightEngine } from '@/packages/engines/fight'
 
 import { ETextTreeIds, GAME_ID, ScenesIds, ScenesImages } from './constants'
@@ -130,6 +130,17 @@ export function useConfig(emitter: TSceneEmmitter) {
             type: 'map',
             engine: () => new MapEngine(mapBaseData, emitter),
             baseData: mapBaseDynamicData
+          }
+        },
+        hooks: {
+          before: (emitter: TSceneEmmitter) => {
+            const mapState = emitter.getState<TMapStore>(ScenesIds.Map)
+            if (mapState && !mapState.eventCells.size) {
+              emitter.setAction({
+                type: EActionType.GoToScene,
+                nextId: ScenesIds.Intro1
+              })
+            }
           }
         },
         textTrees: [
