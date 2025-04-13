@@ -138,7 +138,7 @@ export function useConfig(emitter: TSceneEmmitter) {
             if (mapState && !mapState.eventCells.size) {
               emitter.setAction({
                 type: EActionType.GoToScene,
-                nextId: ScenesIds.Intro1
+                nextId: ScenesIds.Hero
               })
             }
           }

@@ -5,7 +5,7 @@ export const returnStrategies = {
   removeEvent: (emitter: TSceneEmmitter, { prevSceneId }: TSceneActionContext) => {
     if (!prevSceneId) return
     const mapState = emitter.getState<TMapStore>(prevSceneId)
-    if (!mapState || !mapState.lastX || !mapState.lastY) return
+    if (!mapState || mapState.lastX === undefined || mapState.lastY === undefined) return
 
     const eventList = [...mapState.eventCells.entries()]
     const lastKey = getKeyFromCoords(mapState.lastX, mapState.lastY)
