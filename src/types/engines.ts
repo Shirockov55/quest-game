@@ -4,7 +4,7 @@ import type { TGameConfig } from './gameConfig'
 
 export interface TSceneEmmitter {
   setAction(action: TAction): void
-  getContext(): { lockInteractive: boolean }
+  getContext(): TSceneEmmitterContext
   lockInteractive(val: boolean): void
   getState<T = unknown>(sceneId: string): T | null
   setState<T = unknown>(sceneId: string, state: T): void
@@ -15,6 +15,12 @@ export interface TSceneEmmitter {
     props?: Record<string, unknown> | null
   ): void
   setCustomTextComponent(component: InstanceType<any> | null): void
+}
+
+export interface TSceneEmmitterContext {
+  currentSceneId: string
+  prevSceneId: string | null
+  lockInteractive: boolean
 }
 
 export interface TBaseInterractiveData {

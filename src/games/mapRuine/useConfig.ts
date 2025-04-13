@@ -1,6 +1,6 @@
 import { EActionType } from '@/constants'
-import type { TGameConfig, TSceneActionContext, TSceneEmmitter, TextTree } from '@/types'
-import { MapEngine, type TMapStore, type TMapTree } from '@/packages/engines/map'
+import type { TGameConfig, TSceneEmmitter, TextTree } from '@/types'
+import { MapEngine, returnStrategies, type TMapTree } from '@/packages/engines/map'
 import { FightEngine } from '@/packages/engines/fight'
 
 import { ETextTreeIds, GAME_ID, ScenesIds, ScenesImages } from './constants'
@@ -152,7 +152,12 @@ export function useConfig(emitter: TSceneEmmitter) {
                   text: '[Драка неизбежна]',
                   action: {
                     type: EActionType.GoToScene,
-                    nextId: ScenesIds.Monster
+                    nextId: ScenesIds.Monster,
+                    afterReturning: {
+                      success: (emmitter, ctx) =>
+                        returnStrategies.removeEvent(ETextTreeIds.MonsterToFight, emmitter, ctx),
+                      fail: null
+                    }
                   }
                 },
                 {
@@ -177,18 +182,7 @@ export function useConfig(emitter: TSceneEmmitter) {
               fightResults: {
                 success: {
                   type: EActionType.GoBackToPrevScene,
-                  callbacks: {
-                    before: (emitter: TSceneEmmitter, { prevSceneId }: TSceneActionContext) => {
-                      if (!prevSceneId) return
-                      const mapState = emitter.getState<TMapStore>(prevSceneId)
-                      if (!mapState) return
-
-                      mapState.eventCells.delete('5:7')
-                      mapState.eventCells.delete('5:8')
-                      mapState.eventCells.delete('6:7')
-                      emitter.setState<TMapStore>(prevSceneId, mapState)
-                    }
-                  }
+                  withSuccess: true
                 },
                 fail: { type: EActionType.GoToScene, nextId: ScenesIds.Rip }
               },

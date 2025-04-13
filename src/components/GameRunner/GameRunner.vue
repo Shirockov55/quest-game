@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TAction, TGameConfig, TScene, TSceneEmmitter } from '@/types'
+import type { TAction, TAfterReturningScene, TGameConfig, TScene, TSceneEmmitter } from '@/types'
 import { ref, provide } from 'vue'
 import { Scene } from '@/components/Scene'
 
@@ -54,18 +54,33 @@ const getContext = () => {
   }
 }
 
+const returnSceneCallbacks = ref<Record<string, TAfterReturningScene>>({})
+
 const actionHandler = (action: TAction) => {
-  const { prevSceneId } = getContext()
+  const ctx = getContext()
+  const { prevSceneId, currentSceneId } = ctx
   action.callbacks?.before?.(emitter, { prevSceneId })
 
   switch (action.type) {
     case EActionType.GoToScene:
       lockInteractive.value = false
+      if (action.afterReturning) {
+        returnSceneCallbacks.value[currentSceneId] = action.afterReturning
+      }
       goToScene(action.nextId)
       break
     case EActionType.GoBackToPrevScene:
+      if (!prevSceneId) break
       lockInteractive.value = false
-      if (prevSceneId) goToScene(prevSceneId)
+
+      if (action.withSuccess !== undefined) {
+        const callbacks = returnSceneCallbacks.value[prevSceneId]
+        const fn = action.withSuccess ? callbacks.success : callbacks.fail
+        fn?.(emitter, ctx)
+        delete returnSceneCallbacks.value[prevSceneId]
+      }
+
+      goToScene(prevSceneId)
       break
     case EActionType.GoToDialogTree:
       sceneRef.value?.goToDialogTree(action.nextId)

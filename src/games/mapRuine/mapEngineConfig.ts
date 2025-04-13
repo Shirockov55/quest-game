@@ -15,10 +15,13 @@ export const mapBaseData: TMapEngineData = {
   startCoord: { x: 8, y: 8 }
 }
 
+export const group = 'monster1'
+
 export const mapBaseDynamicData: TMapStore = {
   eventCells: (() => {
     const strangeMess: TTextTypeSectorEvent = {
       type: 'text',
+      group,
       action: {
         type: EActionType.GoToDialogTree,
         nextId: ETextTreeIds.StrangeMan
@@ -32,6 +35,7 @@ export const mapBaseDynamicData: TMapStore = {
         imageOnFog: 'enemy1-fog.jpg',
         image: 'enemy1.jpg',
         lockInteractive: true,
+        group,
         action: {
           type: EActionType.GoToDialogTree,
           nextId: ETextTreeIds.MonsterToFight

@@ -1,18 +1,23 @@
 import type { BaseTree, TAction, InteractiveSceneBaseEngine, TBaseInterractiveData } from '@/types'
 
-export interface TTextTypeSectorEvent {
-  type: 'text'
+export interface TBaseSectorEvent {
+  type: string
   action: TAction
+  group?: string
 }
 
-export interface TLockTypeSectorEvent {
+export interface TTextTypeSectorEvent extends TBaseSectorEvent {
+  type: 'text'
+}
+
+export interface TLockTypeSectorEvent extends TBaseSectorEvent {
   type: 'lock'
   image?: string
   imageOnFog?: string
   action: TAction
 }
 
-export interface TEnemySectorEvent {
+export interface TEnemySectorEvent extends TBaseSectorEvent {
   type: 'event'
   image?: string
   imageOnFog?: string
