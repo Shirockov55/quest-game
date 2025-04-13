@@ -154,8 +154,7 @@ export function useConfig(emitter: TSceneEmmitter) {
                     type: EActionType.GoToScene,
                     nextId: ScenesIds.Monster,
                     afterReturning: {
-                      success: (emmitter, ctx) =>
-                        returnStrategies.removeEvent(ETextTreeIds.MonsterToFight, emmitter, ctx),
+                      success: returnStrategies.removeEvent,
                       fail: null
                     }
                   }

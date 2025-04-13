@@ -40,11 +40,12 @@ export abstract class InteractiveSceneBaseEngine<T extends TBaseInterractiveData
   abstract render(canvas: HTMLCanvasElement, props: unknown, config: TGameConfig): void
   abstract resize(boxW: number, boxH: number): void
 
-  loadImage(imageName: string, callback: (img: HTMLImageElement) => void) {
+  loadImage(imageName: string, callback?: (img: HTMLImageElement) => void) {
     const img = new Image()
     img.src = getImageUrl(this.data.gameId, imageName)
-    img.onload = function () {
-      callback(img)
-    }
+    if (callback)
+      img.onload = function () {
+        callback(img)
+      }
   }
 }

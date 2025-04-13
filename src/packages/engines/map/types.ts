@@ -43,6 +43,11 @@ export interface TMapColors {
 export interface TMapEngineData extends TBaseInterractiveData {
   grid: { x: number; y: number }
   startCoord: { x: number; y: number }
+  fogConfig?: {
+    fogExists?: boolean
+    reducedFogExists?: boolean
+    reducedRange?: number
+  }
   colors?: Partial<TMapColors>
 }
 
