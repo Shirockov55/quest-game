@@ -4,15 +4,15 @@
   "version": "0.1.0",
   "identifier": "com.quest-app.app",
   "build": {
-    "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
-    "frontendDist": "../dist"
+    "frontendDist": "../../dist/game"
   },
   "app": {
     "windows": [
       {
-        "title": "quest-app",
+        "fullscreen": true,
+        "resizable": true,
+        "title": "Quest App",
         "width": 800,
         "height": 600
       }

@@ -74,17 +74,32 @@
             ]
         },
         "tauri:dev": {
-            "executor": "@nx/run-commands:run-commands",
+            "executor": "nx:run-commands",
             "options": {
-                "command": "tauri dev",
-                "cwd": "apps/game"
+                "commands": [
+                    "nx serve game",
+                    "cd apps/game/src-tauri && npx @tauri-apps/cli dev"
+                ],
+                "parallel": true,
+                "env": {
+                    "RUST_BACKTRACE": "1",
+                    "CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG": "true",
+                    "CARGO_HOME": "./apps/game/src-tauri/.cargo-home"
+                }
             }
         },
         "tauri:build": {
-            "executor": "@nx/run-commands:run-commands",
+            "executor": "nx:run-commands",
             "options": {
-                "command": "tauri build",
-                "cwd": "apps/game"
+                "commands": [
+                    "nx build game",
+                    "cd apps/game/src-tauri && npx @tauri-apps/cli build"
+                ],
+                "parallel": false,
+                "env": {
+                    "RUST_BACKTRACE": "1",
+                    "CARGO_HOME": "./apps/game/src-tauri/.cargo-home"
+                }
             }
         }
     },

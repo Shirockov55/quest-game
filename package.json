@@ -25,7 +25,6 @@
     "vue-router": "^4.2.5"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.7.2",
     "@nx/devkit": "20.7.2",
     "@nx/eslint": "20.7.2",
     "@nx/eslint-plugin": "20.7.2",
@@ -34,10 +33,13 @@
     "@nx/vite": "20.7.2",
     "@nx/vue": "20.7.2",
     "@nx/web": "20.7.2",
+    "@nx/workspace": "^20.8.0",
     "@playwright/test": "^1.36.0",
+    "@rushstack/eslint-patch": "^1.7.2",
     "@swc-node/register": "~1.9.1",
     "@swc/core": "~1.5.7",
     "@swc/helpers": "~0.5.11",
+    "@tauri-apps/cli": "^2.4.1",
     "@types/node": "18.16.9",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
