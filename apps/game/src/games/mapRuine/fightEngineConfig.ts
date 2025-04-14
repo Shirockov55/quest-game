@@ -138,7 +138,7 @@ export const weapons: Record<string, TFightWeapon<TFightStats>> = {
 
 export const playerChars: TFightStats = {
   name: 'Hero',
-  attack: 5,
+  attack: 500,
   defence: 3,
   resistance: 4,
   health: [25, 30],
