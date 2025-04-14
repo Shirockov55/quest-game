@@ -20,14 +20,16 @@ export const mapBaseData: TMapEngineData = {
   }
 }
 
-const getRandomEnemies = (data: TMapEngineData, count = 10) => {
+const getRandomEnemies = (data: TMapEngineData, count = 10, offset = 1) => {
   const eventMapCells: TEventCells = new Map()
-  const offset = 1
-  while (count) {
+  let limitCount = 100
+
+  while (limitCount && count) {
     const randX = Math.floor(Math.random() * data.grid.x)
     const randY = Math.floor(Math.random() * data.grid.y)
     const key = getKeyFromCoords(randX, randY)
 
+    limitCount--
     if (
       eventMapCells.has(key) ||
       (data.startCoord.x - 1 === randX && data.startCoord.y - 1 === randY)
@@ -35,8 +37,8 @@ const getRandomEnemies = (data: TMapEngineData, count = 10) => {
       continue
 
     let foundNeighbour = false
-    for (let i = -1; i <= 1; i++) {
-      for (let j = -1; j <= 1; j++) {
+    for (let i = -offset; i <= offset; i++) {
+      for (let j = -offset; j <= offset; j++) {
         if (i === 0 && j === 0) continue
         const offsetKey = getKeyFromCoords(randX + i, randY + j)
 

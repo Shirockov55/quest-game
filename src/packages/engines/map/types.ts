@@ -27,7 +27,11 @@ export interface TEnemySectorEvent extends TBaseSectorEvent {
 
 export type TSectorEventTypeUnion = TTextTypeSectorEvent | TLockTypeSectorEvent | TEnemySectorEvent
 
-export type TEventCells = Map<`${number}:${number}`, TSectorEventTypeUnion>
+export type TCoordsMapKey = `${number}:${number}`
+export type TCoordsMapValue = [number, number, number, number]
+
+export type TMapCells = Map<TCoordsMapKey, TCoordsMapValue>
+export type TEventCells = Map<TCoordsMapKey, TSectorEventTypeUnion>
 
 export interface TMapTree extends BaseTree {
   once?: boolean
@@ -59,7 +63,7 @@ export interface TMapEngineConfig {
 
 export interface TMapStore {
   eventCells: TEventCells
-  openedSectors?: Record<number, Record<number, boolean>>
+  openedSectors?: Set<TCoordsMapKey>
   lastX?: number
   lastY?: number
 }
